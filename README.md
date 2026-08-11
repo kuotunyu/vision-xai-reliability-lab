@@ -32,10 +32,27 @@ split (attribution methods are expensive) — the exact scale is stated in the
 generated block itself. The repo also ships a `smoke` config that runs the same
 chain on CPU in minutes, for verifying the mechanics.
 
+## What this experiment found
+
+1. A fixed center prior reached **0.922 pointing-game accuracy** for both model
+   families, beating every evaluated attribution method. That exposes dataset
+   composition bias and is localization evidence, not causal faithfulness.
+2. Integrated Gradients **did not pass the model-randomization sanity
+   expectation**: its maps retained about 0.47–0.48 absolute Spearman
+   similarity after head randomization, substantially more than the other
+   evaluated methods. The expectation was qualitative (low is healthy); no
+   post-hoc numeric pass threshold is claimed.
+3. The spurious-patch experiment was a **negative result**. Under this
+   frozen-backbone, head-only regime, the models did not learn the intended
+   shortcut. This is not evidence that vision models generally resist
+   spurious cues.
+
 ## Results (generated)
 
-Everything between the markers below is written by `vision_xai report` from
-`results/derived/summary.json`; nothing is typed in by hand.
+Everything between the markers below is generated from
+`results/derived/summary.json`; nothing is typed in by hand. Report generation
+does not modify public evidence by default. Only the canonical full experiment
+may opt in with `--update-public-artifacts` after review.
 
 <!-- RESULTS:BEGIN -->
 **Experiment `full`** — generated 2026-07-25T14:53:10.938993+00:00
@@ -116,32 +133,39 @@ Requires Python ≥ 3.11 and [uv](https://docs.astral.sh/uv/). All commands are
 identical in PowerShell and bash unless noted.
 
 ```sh
-uv sync --frozen                                # CPU-only torch, deterministic from uv.lock
-uv run python -m vision_xai.cli self-check      # CPU smoke test
-uv run pytest -q                                # synthetic fixtures only, no dataset needed
+uv sync --frozen --no-editable                  # CPU-only torch, deterministic from uv.lock
+uv run --no-sync python -m vision_xai.cli self-check
+uv run --no-sync pytest -q                      # synthetic fixtures only, no dataset needed
 ```
 
 The full pipeline (one-time ~800 MB dataset download from the official Oxford
 VGG server on the first step):
 
 ```sh
-uv run python -m vision_xai.cli data prepare --config configs/smoke.yaml
-uv run python -m vision_xai.cli train --model cnn --config configs/smoke.yaml
-uv run python -m vision_xai.cli train --model vit --config configs/smoke.yaml
-uv run python -m vision_xai.cli train --model cnn --patched --config configs/smoke.yaml
-uv run python -m vision_xai.cli explain --model cnn --method gradcam --config configs/smoke.yaml
-uv run python -m vision_xai.cli explain --model cnn --method integrated_gradients --config configs/smoke.yaml
-uv run python -m vision_xai.cli explain --model vit --method integrated_gradients --config configs/smoke.yaml
-uv run python -m vision_xai.cli evaluate --config configs/smoke.yaml
-uv run python -m vision_xai.cli report --config configs/smoke.yaml
-uv run python -m vision_xai.cli serve --config configs/smoke.yaml   # API + /demo UI
+uv run --no-sync python -m vision_xai.cli data prepare --config configs/smoke.yaml
+uv run --no-sync python -m vision_xai.cli train --model cnn --config configs/smoke.yaml
+uv run --no-sync python -m vision_xai.cli train --model vit --config configs/smoke.yaml
+uv run --no-sync python -m vision_xai.cli train --model cnn --patched --config configs/smoke.yaml
+uv run --no-sync python -m vision_xai.cli explain --model cnn --method gradcam --config configs/smoke.yaml
+uv run --no-sync python -m vision_xai.cli explain --model cnn --method integrated_gradients --config configs/smoke.yaml
+uv run --no-sync python -m vision_xai.cli explain --model vit --method integrated_gradients --config configs/smoke.yaml
+uv run --no-sync python -m vision_xai.cli evaluate --config configs/smoke.yaml
+uv run --no-sync python -m vision_xai.cli report --config configs/smoke.yaml
+uv run --no-sync python -m vision_xai.cli serve --config configs/smoke.yaml   # API + /demo UI
+```
+
+The smoke report stays under `.artifacts/smoke/`. To regenerate the committed
+full block and figures from complete local raw outputs, use the explicit guard:
+
+```sh
+uv run --no-sync python -m vision_xai.cli report --config configs/full.yaml --update-public-artifacts
 ```
 
 Long runs checkpoint every 32 samples and can be interrupted at any point:
 
 ```sh
-uv run python -m vision_xai.cli data prepare --config configs/full.yaml --max-items 200
-uv run python -m vision_xai.cli data prepare --config configs/full.yaml --resume
+uv run --no-sync python -m vision_xai.cli data prepare --config configs/full.yaml --max-items 200
+uv run --no-sync python -m vision_xai.cli data prepare --config configs/full.yaml --resume
 ```
 
 Override the dataset location without editing configs:
@@ -149,12 +173,12 @@ Override the dataset location without editing configs:
 ```powershell
 # PowerShell
 $env:VISION_XAI_DATA_DIR = "<dataset-path>"
-uv run python -m vision_xai.cli data prepare --config configs/smoke.yaml
+uv run --no-sync python -m vision_xai.cli data prepare --config configs/smoke.yaml
 ```
 
 ```sh
 # bash
-VISION_XAI_DATA_DIR=/mnt/d/datasets/pets uv run python -m vision_xai.cli data prepare --config configs/smoke.yaml
+VISION_XAI_DATA_DIR=/mnt/d/datasets/pets uv run --no-sync python -m vision_xai.cli data prepare --config configs/smoke.yaml
 ```
 
 ## Docker (CPU)
@@ -189,7 +213,8 @@ tools/              local release and CUDA-canary verification
 ```
 
 Key documents: [DATA_CARD.md](DATA_CARD.md) · [MODEL_CARD.md](MODEL_CARD.md) ·
-[ARTIFACTS.md](ARTIFACTS.md) · [FAILURES.md](FAILURES.md)
+[ARTIFACTS.md](ARTIFACTS.md) · [FAILURES.md](FAILURES.md) ·
+[OWNER_ACTIONS.md](OWNER_ACTIONS.md)
 
 ## Design notes (Stage 1)
 
@@ -211,10 +236,10 @@ Key documents: [DATA_CARD.md](DATA_CARD.md) · [MODEL_CARD.md](MODEL_CARD.md) ·
 ## Development
 
 ```sh
-uv run ruff format --check .
-uv run ruff check .
-uv run mypy src tests
-uv run pytest -q
+uv run --no-sync ruff format --check .
+uv run --no-sync ruff check .
+uv run --no-sync mypy src tests app tools
+uv run --no-sync pytest -q
 ```
 
 ## License

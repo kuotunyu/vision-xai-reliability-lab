@@ -10,10 +10,23 @@ PyTorch's native libraries because incompatible OpenMP/MKL DLLs were visible on
 the process search path. Reinstalling the wheels did not change the failure.
 
 The repository therefore pins Python 3.11 in `.python-version` and sets
-`python-preference = "only-managed"` for uv. A fresh `uv sync --frozen` uses an
-isolated uv-managed interpreter. Docker deliberately overrides this setting to
-`only-system` because the official `python:3.11-slim` image already provides an
-isolated interpreter.
+`python-preference = "only-managed"` for uv. A fresh
+`uv sync --frozen --no-editable` uses an isolated uv-managed interpreter.
+Docker deliberately overrides this setting to `only-system` because the
+official `python:3.11-slim` image already provides an isolated interpreter.
+
+## Windows: non-ASCII workspace paths and editable installs
+
+Python 3.11 on a Windows locale that is not UTF-8 can fail before application
+startup when an editable-install `.pth` file contains a non-ASCII repository
+path. The `.pth` file is UTF-8, while `site.py` may decode it using the active
+legacy code page. This is an interpreter/package-install interaction, not a
+model or dataset failure.
+
+The documented release workflow therefore uses
+`uv sync --frozen --no-editable`, followed by `uv run --no-sync ...` so uv does
+not replace the regular install with an editable one. Built wheels are also
+regular installs and do not embed the repository path.
 
 ## CUDA notebooks: editable installs are not visible immediately
 

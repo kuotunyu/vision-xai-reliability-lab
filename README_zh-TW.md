@@ -29,10 +29,22 @@ Attribution 與可靠性指標是在 test split 的固定子集上計算（attri
 確切規模直接寫在下方自動產生的區塊裡。另有 `smoke` config 可在 CPU 上幾分鐘跑完同一條
 流程，用於驗證機制。
 
+## 這次實驗真正發現了什麼
+
+1. 固定 center prior 在兩種模型的 pointing game 都達到 **0.922**，
+   勝過所有實際 attribution method。這暴露了 dataset composition bias，
+   只是 localization 證據，不是 causal faithfulness。
+2. Integrated Gradients **未通過 model-randomization sanity expectation**：
+   head randomization 後仍保留約 0.47–0.48 的 absolute Spearman similarity，
+   明顯高於其他受測方法。預先的期待是「低才健康」，沒有事後自訂的數值門檻。
+3. Spurious-patch 實驗是**負結果**。在 frozen-backbone、head-only 訓練設定下，
+   模型沒有學到預期的 shortcut；這不能被解讀為 vision model 普遍抵抗 spurious cue。
+
 ## 實驗結果（自動產生）
 
-以下標記之間的內容全部由 `vision_xai report` 從
-`results/derived/summary.json` 產生，不手填。
+以下標記之間的內容由 `results/derived/summary.json` 產生，不手填。
+Report 預設不會修改公開證據；只有 canonical full experiment 可在審查後以
+`--update-public-artifacts` 明確選擇更新。
 
 <!-- RESULTS:BEGIN -->
 **Experiment `full`** — generated 2026-07-25T14:53:10.938993+00:00
@@ -113,22 +125,22 @@ _A heatmap is not proof of causal reasoning._
 PowerShell 與 bash 指令相同。
 
 ```sh
-uv sync --frozen                                # CPU-only torch，由 uv.lock 決定版本
-uv run python -m vision_xai.cli self-check      # CPU 煙霧測試
-uv run pytest -q                                # 只用合成 fixtures，不需下載 dataset
+uv sync --frozen --no-editable                  # CPU-only torch，由 uv.lock 決定版本
+uv run --no-sync python -m vision_xai.cli self-check
+uv run --no-sync pytest -q                      # 只用合成 fixtures，不需下載 dataset
 ```
 
 準備 dataset（一次性下載約 800 MB，來源為牛津 VGG 官方伺服器）：
 
 ```sh
-uv run python -m vision_xai.cli data prepare --config configs/smoke.yaml
+uv run --no-sync python -m vision_xai.cli data prepare --config configs/smoke.yaml
 ```
 
 長任務每 32 筆存一次 checkpoint，可隨時中斷：
 
 ```sh
-uv run python -m vision_xai.cli data prepare --config configs/full.yaml --max-items 200
-uv run python -m vision_xai.cli data prepare --config configs/full.yaml --resume
+uv run --no-sync python -m vision_xai.cli data prepare --config configs/full.yaml --max-items 200
+uv run --no-sync python -m vision_xai.cli data prepare --config configs/full.yaml --resume
 ```
 
 不改 config 直接覆寫 dataset 位置：
@@ -136,12 +148,12 @@ uv run python -m vision_xai.cli data prepare --config configs/full.yaml --resume
 ```powershell
 # PowerShell
 $env:VISION_XAI_DATA_DIR = "<dataset-path>"
-uv run python -m vision_xai.cli data prepare --config configs/smoke.yaml
+uv run --no-sync python -m vision_xai.cli data prepare --config configs/smoke.yaml
 ```
 
 ```sh
 # bash
-VISION_XAI_DATA_DIR=/mnt/d/datasets/pets uv run python -m vision_xai.cli data prepare --config configs/smoke.yaml
+VISION_XAI_DATA_DIR=/mnt/d/datasets/pets uv run --no-sync python -m vision_xai.cli data prepare --config configs/smoke.yaml
 ```
 
 ## Docker（CPU）
@@ -175,7 +187,8 @@ tools/              本機 release 與 CUDA canary 驗證工具
 ```
 
 重要文件：[DATA_CARD.md](DATA_CARD.md) · [MODEL_CARD.md](MODEL_CARD.md) ·
-[ARTIFACTS.md](ARTIFACTS.md) · [FAILURES.md](FAILURES.md)
+[ARTIFACTS.md](ARTIFACTS.md) · [FAILURES.md](FAILURES.md) ·
+[OWNER_ACTIONS.md](OWNER_ACTIONS.md)
 
 ## 設計重點（Stage 1）
 
@@ -194,10 +207,10 @@ tools/              本機 release 與 CUDA canary 驗證工具
 ## 開發
 
 ```sh
-uv run ruff format --check .
-uv run ruff check .
-uv run mypy src tests
-uv run pytest -q
+uv run --no-sync ruff format --check .
+uv run --no-sync ruff check .
+uv run --no-sync mypy src tests app tools
+uv run --no-sync pytest -q
 ```
 
 ## 授權

@@ -17,7 +17,8 @@
 
 - Task: 37-class breed classification on Oxford-IIIT Pet
   ([DATA_CARD.md](DATA_CARD.md)).
-- Checkpoints store only the head (+ optimizer state + config hash); the
+- Checkpoints store only the head, optimizer and GradScaler states, epoch and
+  config hashes; the
   backbone is reproducible from the official pretrained weights. Checkpoints
   are gitignored and never committed.
 - Training facts (device name, elapsed time, peak VRAM) are recorded as
@@ -58,12 +59,14 @@ the generated block of [README.md](README.md); the interpretation is below.
    scores higher than Grad-CAM without looking at the image at all. Pointing
    game — and localization generally — is therefore weak evidence about a
    method's quality on this dataset.
-2. **Integrated Gradients largely fails the model-randomization sanity check.**
-   After re-initializing the classification head, IG's maps stay far more
-   similar to the originals (|Spearman| ≈ 0.47–0.48) than Grad-CAM's (≈ 0.22) or
-   Occlusion's (≈ 0.23). A method whose output barely moves when the model's
-   learned parameters are destroyed is not, on this evidence, explaining the
-   model. This reproduces the failure mode reported by Adebayo et al. (2018).
+2. **Integrated Gradients did not pass the model-randomization sanity
+   expectation.** After re-initializing the classification head, IG's maps
+   retain |Spearman| ≈ 0.47–0.48 similarity, versus ≈ 0.22 for Grad-CAM and
+   ≈ 0.23 (CNN) / ≈ 0.32 (ViT) for Occlusion. The pre-specified expectation
+   was qualitative—low similarity is healthy—and this release does not invent a
+   post-hoc numeric threshold. The result is consistent with the failure mode
+   discussed by Adebayo et al. (2018); it is not claimed as an independent
+   reproduction of that paper.
 3. **The spurious-cue experiment is a negative result, reported as such.** The
    patched-trained models score almost identically on the correlated,
    no-patch, and counter-correlated test sets, and attribution energy on the
@@ -87,4 +90,8 @@ the generated block of [README.md](README.md); the interpretation is below.
   validation split. The generated `scale_note` states this on every report.
 - One seed, one training regime (head-only), one dataset. Differences between
   methods here are not general claims about those methods.
+- The local RTX 4090 resume canary uses a tiny synthetic head-only workload and
+  an epoch-boundary interruption. Its exact state equivalence applies only to
+  the recorded software stack; it neither repeats nor proves resumability of
+  the full L4 experiment. See [ARTIFACTS.md](ARTIFACTS.md).
 - **A heatmap is not proof of causal reasoning.**
