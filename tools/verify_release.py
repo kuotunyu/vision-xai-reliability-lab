@@ -10,6 +10,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
+import subprocess
 import sys
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -19,6 +21,39 @@ RESULTS_END = "<!-- RESULTS:END -->"
 BASELINES = {"center", "random", "uniform"}
 ATTRIBUTION_SUBSET_SIZE = 500
 MAX_SPURIOUS_ACCURACY_SPREAD = 0.02
+MAX_TRACKED_FILE_BYTES = 1024 * 1024
+GIT_LOG_FIELD_COUNT = 4
+EXPECTED_GIT_IDENTITY = "kuotunyu <61350295+kuotunyu@users.noreply.github.com>"
+FORBIDDEN_ROOT_NAMES = {
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    "checkpoints",
+    "data",
+    "notebooks",
+}
+FORBIDDEN_EXACT_PATHS = {"PROGRESS.md", "RELEASE_AUDIT.md"}
+FORBIDDEN_WEIGHT_SUFFIXES = {".ckpt", ".pt", ".pth"}
+ALLOWED_RAW_RESULTS = {
+    "results/raw/data_prepare/full/fingerprint.json",
+    "results/raw/data_prepare/full/patch_summary.json",
+    "results/raw/data_prepare/full/split_summary.json",
+}
+TEXT_SUFFIXES = {
+    "",
+    ".example",
+    ".gitignore",
+    ".gitattributes",
+    ".json",
+    ".lock",
+    ".md",
+    ".py",
+    ".toml",
+    ".txt",
+    ".yaml",
+    ".yml",
+}
 
 
 class VerificationError(RuntimeError):
@@ -168,26 +203,131 @@ def verify_readme_synchronization(root: Path) -> None:
             raise VerificationError(f"{name} result block differs from summary.md")
 
 
-def verify(root: Path) -> list[str]:
+def _git(root: Path, *args: str) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(root), *args],
+        check=False,
+        capture_output=True,
+        encoding="utf-8",
+        errors="strict",
+    )
+    if result.returncode != 0:
+        raise VerificationError(f"git {' '.join(args)} failed: {result.stderr.strip()}")
+    return result.stdout
+
+
+def _tracked_paths(root: Path) -> list[str]:
+    return [path for path in _git(root, "ls-files", "-z").split("\0") if path]
+
+
+def verify_git_identity_and_history(root: Path, *, allow_dirty: bool) -> None:
+    if _git(root, "branch", "--show-current").strip() != "main":
+        raise VerificationError("release candidate must be on branch main")
+    if _git(root, "remote").strip():
+        raise VerificationError("release candidate must not have a Git remote")
+    if _git(root, "tag", "--list").strip():
+        raise VerificationError("release candidate must not have tags")
+    if not allow_dirty and _git(root, "status", "--porcelain=v1").strip():
+        raise VerificationError("release candidate working tree is not clean")
+
+    records = _git(
+        root,
+        "log",
+        "--format=%H%x1f%an <%ae>%x1f%cn <%ce>%x1f%B%x1e",
+    )
+    if not records.strip():
+        raise VerificationError("release candidate has no commits")
+    trailer_pattern = re.compile(
+        r"(?im)^(?:co-authored-by|signed-off-by|reviewed-by|tested-by|assisted-by):"
+    )
+    for record in records.split("\x1e"):
+        if not record.strip():
+            continue
+        fields = record.strip().split("\x1f", 3)
+        if len(fields) != GIT_LOG_FIELD_COUNT:
+            raise VerificationError("could not parse Git history record")
+        commit, author, committer, body = fields
+        if author != EXPECTED_GIT_IDENTITY or committer != EXPECTED_GIT_IDENTITY:
+            raise VerificationError(f"unexpected author or committer in {commit}")
+        if trailer_pattern.search(body):
+            raise VerificationError(f"forbidden contributor trailer in {commit}")
+
+
+def verify_privacy_and_tracked_boundary(root: Path) -> int:
+    tracked = _tracked_paths(root)
+    if not tracked:
+        raise VerificationError("release candidate tracks no files")
+    windows_user_path = re.compile(r"(?i)[a-z]:[\\/]Users[\\/][A-Za-z0-9._-]+[\\/]")
+    posix_user_path = re.compile(r"/(?:home|Users)/[A-Za-z0-9._-]+/")
+    secret_patterns = (
+        re.compile(r"AKIA[0-9A-Z]{16}"),
+        re.compile(r"gh[pousr]_[A-Za-z0-9]{20,}"),
+        re.compile(r"sk-[A-Za-z0-9]{20,}"),
+        re.compile("BEGIN " + r"(?:RSA |OPENSSH |EC |DSA )?" + "PRIVATE KEY"),
+    )
+    for relative in tracked:
+        pure = PurePosixPath(relative)
+        if relative in FORBIDDEN_EXACT_PATHS or pure.parts[0] in FORBIDDEN_ROOT_NAMES:
+            raise VerificationError(f"forbidden tracked path: {relative}")
+        if pure.suffix.lower() in FORBIDDEN_WEIGHT_SUFFIXES:
+            raise VerificationError(f"tracked model/checkpoint file: {relative}")
+        if relative.startswith("results/raw/") and relative not in ALLOWED_RAW_RESULTS:
+            raise VerificationError(f"tracked raw runtime result: {relative}")
+        path = _safe_path(root, relative)
+        size = path.stat().st_size
+        if size > MAX_TRACKED_FILE_BYTES:
+            raise VerificationError(f"tracked file exceeds 1 MiB: {relative}")
+        if pure.suffix.lower() not in TEXT_SUFFIXES:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError as exc:
+            raise VerificationError(f"tracked text is not UTF-8: {relative}") from exc
+        if windows_user_path.search(text) or posix_user_path.search(text):
+            raise VerificationError(f"private absolute path in tracked file: {relative}")
+        if any(pattern.search(text) for pattern in secret_patterns):
+            raise VerificationError(f"possible secret in tracked file: {relative}")
+    if not (root / "LICENSE").is_file():
+        raise VerificationError("LICENSE is missing")
+    return len(tracked)
+
+
+def verify(root: Path, *, git: bool = False, allow_dirty: bool = False) -> list[str]:
     root = root.resolve()
     artifact_count = verify_artifact_hashes(root)
     summary = verify_summary_schema(root)
     verify_claim_invariants(summary)
     verify_readme_synchronization(root)
-    return [
+    checks = [
         f"PASS artifact hashes ({artifact_count} files)",
         "PASS JSON schemas and full-summary shape",
         "PASS claim invariants",
         "PASS README synchronization",
     ]
+    if git:
+        verify_git_identity_and_history(root, allow_dirty=allow_dirty)
+        tracked_count = verify_privacy_and_tracked_boundary(root)
+        checks.extend(
+            [
+                "PASS Git identity and history",
+                f"PASS privacy and tracked-file boundary ({tracked_count} files)",
+            ]
+        )
+    return checks
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path.cwd(), help="repository root")
+    parser.add_argument("--git", action="store_true", help="also audit local Git state/history")
+    parser.add_argument(
+        "--allow-dirty",
+        action="store_true",
+        help="permit a dirty tree during development (final release checks must omit this)",
+    )
     args = parser.parse_args()
     try:
-        checks = verify(args.root)
+        checks = verify(args.root, git=args.git, allow_dirty=args.allow_dirty)
     except VerificationError as exc:
         sys.stderr.write(f"FAIL {exc}\n")
         return 1

@@ -65,7 +65,7 @@ torchvision = [{ index = "pytorch-cpu" }]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-src = ["src", "tests", "app"]
+src = ["src", "tests", "app", "tools"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "PL", "T20"]

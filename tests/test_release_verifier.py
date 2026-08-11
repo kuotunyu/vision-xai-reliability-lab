@@ -10,9 +10,15 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
-def _run_verifier(root: Path) -> subprocess.CompletedProcess[str]:
+def _run_verifier(root: Path, *extra_args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        [sys.executable, str(REPO_ROOT / "tools" / "verify_release.py"), "--root", str(root)],
+        [
+            sys.executable,
+            str(REPO_ROOT / "tools" / "verify_release.py"),
+            "--root",
+            str(root),
+            *extra_args,
+        ],
         cwd=REPO_ROOT,
         check=False,
         capture_output=True,
@@ -43,6 +49,21 @@ def _refresh_summary_manifest(root: Path) -> None:
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 
 
+def _git(root: Path, *args: str) -> None:
+    subprocess.run(["git", "-C", str(root), *args], check=True, capture_output=True)
+
+
+def _initialize_candidate_git(
+    root: Path, *, name: str = "kuotunyu", email: str = "61350295+kuotunyu@users.noreply.github.com"
+) -> None:
+    shutil.copy2(REPO_ROOT / "LICENSE", root / "LICENSE")
+    _git(root, "init", "-b", "main")
+    _git(root, "config", "user.name", name)
+    _git(root, "config", "user.email", email)
+    _git(root, "add", "--all")
+    _git(root, "commit", "-m", "test fixture")
+
+
 def test_release_verifier_accepts_committed_evidence() -> None:
     result = _run_verifier(REPO_ROOT)
 
@@ -50,6 +71,14 @@ def test_release_verifier_accepts_committed_evidence() -> None:
     assert "artifact hashes" in result.stdout
     assert "claim invariants" in result.stdout
     assert "README synchronization" in result.stdout
+
+
+def test_release_verifier_accepts_repository_boundary_during_development() -> None:
+    result = _run_verifier(REPO_ROOT, "--git", "--allow-dirty")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "Git identity and history" in result.stdout
+    assert "privacy and tracked-file boundary" in result.stdout
 
 
 def test_release_verifier_rejects_tampered_artifact(tmp_path: Path) -> None:
@@ -120,3 +149,25 @@ def test_release_verifier_rejects_readme_drift(tmp_path: Path) -> None:
 
     assert result.returncode == 1
     assert "README.md result block differs from summary.md" in result.stderr
+
+
+def test_release_verifier_rejects_tracked_private_progress(tmp_path: Path) -> None:
+    root = _copy_evidence(tmp_path)
+    _initialize_candidate_git(root)
+    (root / "PROGRESS.md").write_text("private handoff\n", encoding="utf-8")
+    _git(root, "add", "PROGRESS.md")
+
+    result = _run_verifier(root, "--git", "--allow-dirty")
+
+    assert result.returncode == 1
+    assert "forbidden tracked path: PROGRESS.md" in result.stderr
+
+
+def test_release_verifier_rejects_unexpected_commit_identity(tmp_path: Path) -> None:
+    root = _copy_evidence(tmp_path)
+    _initialize_candidate_git(root, name="Wrong User", email="wrong@example.com")
+
+    result = _run_verifier(root, "--git")
+
+    assert result.returncode == 1
+    assert "unexpected author or committer" in result.stderr
