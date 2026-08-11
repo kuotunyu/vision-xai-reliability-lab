@@ -8,11 +8,17 @@ import pytest
 import tools.cuda_resume_canary as canary
 import torch
 from tools.cuda_resume_canary import (
+    DEFAULT_LEASE_PATH,
     CanaryError,
     _gpu_lease,
     _safe_run_directory,
     _state_differences,
 )
+
+
+def test_default_gpu_lease_is_project_scoped() -> None:
+    assert DEFAULT_LEASE_PATH.name == "vision-xai-rtx4090-compute.lease"
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 

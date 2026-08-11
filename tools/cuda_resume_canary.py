@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_OUTPUT_ROOT = Path(".artifacts/cuda-resume-canary")
-DEFAULT_LEASE_PATH = Path(tempfile.gettempdir()) / "codex-rtx4090-compute.lease"
+DEFAULT_LEASE_PATH = Path(tempfile.gettempdir()) / "vision-xai-rtx4090-compute.lease"
 CANARY_SCHEMA_VERSION = 1
 GPU_METADATA_FIELD_COUNT = 2
 PMON_MIN_FIELDS = 3
