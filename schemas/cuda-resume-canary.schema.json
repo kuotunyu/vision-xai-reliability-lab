@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/vision-xai/cuda-resume-canary.schema.json",
+  "title": "Vision XAI CUDA AMP resume canary evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "status",
+    "created_at",
+    "scope",
+    "hardware",
+    "software",
+    "configuration",
+    "execution",
+    "comparisons",
+    "metrics",
+    "equivalence_policy",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "cuda_amp_epoch_boundary_resume_canary"},
+    "status": {"enum": ["PASS", "FAIL"]},
+    "created_at": {"type": "string", "format": "date-time"},
+    "scope": {
+      "type": "object",
+      "required": ["dataset", "model", "epochs", "interruption", "not_full_scale"],
+      "properties": {
+        "not_full_scale": {"const": true}
+      }
+    },
+    "hardware": {"type": "object"},
+    "software": {"type": "object"},
+    "configuration": {"type": "object"},
+    "execution": {"type": "object"},
+    "comparisons": {
+      "type": "object",
+      "required": [
+        "head_state_exact",
+        "optimizer_state_exact",
+        "grad_scaler_state_exact",
+        "stable_metrics_exact",
+        "checkpoint_file_sha256_equal",
+        "scheduler_state",
+        "differences"
+      ],
+      "properties": {
+        "head_state_exact": {"type": "boolean"},
+        "optimizer_state_exact": {"type": "boolean"},
+        "grad_scaler_state_exact": {"type": "boolean"},
+        "stable_metrics_exact": {"type": "boolean"},
+        "checkpoint_file_sha256_equal": {"type": "boolean"},
+        "scheduler_state": {"type": "object"},
+        "differences": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "metrics": {"type": "object"},
+    "equivalence_policy": {"type": "object"},
+    "limitations": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+  }
+}
