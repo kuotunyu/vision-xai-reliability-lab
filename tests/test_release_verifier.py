@@ -33,6 +33,8 @@ def _copy_evidence(tmp_path: Path) -> Path:
         shutil.copytree(REPO_ROOT / directory, root / directory)
     for filename in ("README.md", "README_zh-TW.md"):
         shutil.copy2(REPO_ROOT / filename, root / filename)
+    for filename in ("ARTIFACTS.md", "DATA_CARD.md", "FAILURES.md", "MODEL_CARD.md"):
+        shutil.copy2(REPO_ROOT / filename, root / filename)
     return root
 
 
@@ -80,6 +82,7 @@ def test_release_verifier_accepts_repository_boundary_during_development() -> No
     assert result.returncode == 0, result.stdout + result.stderr
     assert "Git identity and history" in result.stdout
     assert "privacy and tracked-file boundary" in result.stdout
+    assert "Markdown local links" in result.stdout
 
 
 def test_release_verifier_rejects_tampered_artifact(tmp_path: Path) -> None:
@@ -189,3 +192,18 @@ def test_release_verifier_rejects_unexpected_commit_identity(tmp_path: Path) -> 
 
     assert result.returncode == 1
     assert "unexpected author or committer" in result.stderr
+
+
+def test_release_verifier_rejects_broken_local_markdown_link(tmp_path: Path) -> None:
+    root = _copy_evidence(tmp_path)
+    readme = root / "README.md"
+    readme.write_text(
+        readme.read_text(encoding="utf-8") + "\n[missing](docs/not-present.md)\n",
+        encoding="utf-8",
+    )
+    _initialize_candidate_git(root)
+
+    result = _run_verifier(root, "--git")
+
+    assert result.returncode == 1
+    assert "broken local Markdown link" in result.stderr

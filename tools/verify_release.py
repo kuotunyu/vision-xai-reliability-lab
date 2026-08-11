@@ -15,6 +15,7 @@ import subprocess
 import sys
 from pathlib import Path, PurePosixPath
 from typing import Any
+from urllib.parse import unquote, urlsplit
 
 RESULTS_BEGIN = "<!-- RESULTS:BEGIN -->"
 RESULTS_END = "<!-- RESULTS:END -->"
@@ -330,6 +331,38 @@ def verify_privacy_and_tracked_boundary(root: Path) -> int:
     return len(tracked)
 
 
+def verify_markdown_links(root: Path) -> int:
+    """Require every tracked local Markdown link to resolve inside the repository."""
+    link_pattern = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
+    checked = 0
+    for relative in _tracked_paths(root):
+        if PurePosixPath(relative).suffix.lower() != ".md":
+            continue
+        source = _safe_path(root, relative)
+        for raw_target in link_pattern.findall(source.read_text(encoding="utf-8")):
+            target = raw_target.strip()
+            if target.startswith("<") and target.endswith(">"):
+                target = target[1:-1]
+            target = target.split(maxsplit=1)[0]
+            parsed = urlsplit(target)
+            if parsed.scheme or parsed.netloc or target.startswith("#"):
+                continue
+            local = unquote(parsed.path)
+            if not local:
+                continue
+            destination = (source.parent / Path(local)).resolve()
+            try:
+                destination.relative_to(root)
+            except ValueError as exc:
+                raise VerificationError(
+                    f"local Markdown link escapes repository: {relative} -> {target}"
+                ) from exc
+            if not destination.exists():
+                raise VerificationError(f"broken local Markdown link: {relative} -> {target}")
+            checked += 1
+    return checked
+
+
 def verify(root: Path, *, git: bool = False, allow_dirty: bool = False) -> list[str]:
     root = root.resolve()
     artifact_count = verify_artifact_hashes(root)
@@ -347,10 +380,12 @@ def verify(root: Path, *, git: bool = False, allow_dirty: bool = False) -> list[
     if git:
         verify_git_identity_and_history(root, allow_dirty=allow_dirty)
         tracked_count = verify_privacy_and_tracked_boundary(root)
+        link_count = verify_markdown_links(root)
         checks.extend(
             [
                 "PASS Git identity and history",
                 f"PASS privacy and tracked-file boundary ({tracked_count} files)",
+                f"PASS Markdown local links ({link_count} links)",
             ]
         )
     return checks
