@@ -131,6 +131,36 @@ def test_build_report_end_to_end(evaluated_config: AppConfig, tmp_path: Path) ->
     assert (result.summary_path.parent / "summary.md").is_file()
 
 
+def test_non_full_report_cannot_modify_public_readmes_or_assets(
+    evaluated_config: AppConfig,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A smoke/test report must stay inside its configured result root.
+
+    This catches the old default that mirrored every report into
+    ``assets/figures`` and rewrote both public READMEs regardless of the
+    experiment name.
+    """
+    monkeypatch.chdir(tmp_path)
+    sentinel = f"# public\n{RESULTS_BEGIN}\nDO NOT REPLACE\n{RESULTS_END}\n"
+    Path("README.md").write_text(sentinel, encoding="utf-8")
+    Path("README_zh-TW.md").write_text(sentinel, encoding="utf-8")
+
+    result = build_report(evaluated_config)
+
+    assert result.readmes_updated == []
+    assert Path("README.md").read_text(encoding="utf-8") == sentinel
+    assert Path("README_zh-TW.md").read_text(encoding="utf-8") == sentinel
+    assert not Path("assets").exists()
+
+
+def test_non_full_report_rejects_public_artifact_update(evaluated_config: AppConfig) -> None:
+    """Only the canonical ``full`` experiment may opt into public mutation."""
+    with pytest.raises(ReportError, match="experiment 'full'"):
+        build_report(evaluated_config, publish=True)
+
+
 def test_build_summary_without_eval_raises(
     synthetic_data_dir: Path, config_factory: ConfigFactory
 ) -> None:

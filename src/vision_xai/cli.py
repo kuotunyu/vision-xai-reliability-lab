@@ -226,16 +226,23 @@ def evaluate(
 @app.command()
 def report(
     config: Annotated[Path, typer.Option("--config", help="Path to a YAML config file.")],
+    update_public_artifacts: Annotated[
+        bool,
+        typer.Option(
+            "--update-public-artifacts",
+            help="For experiment 'full' only: update committed README blocks and figures.",
+        ),
+    ] = False,
     verbose: Annotated[bool, typer.Option("--verbose", help="Enable debug logging.")] = False,
 ) -> None:
-    """Aggregate raw results into summary.json + figures and update the READMEs."""
+    """Aggregate raw results without mutating public evidence by default."""
     setup_logging("DEBUG" if verbose else None)
     from vision_xai.config import load_config
     from vision_xai.report.build import build_report
 
     try:
         cfg = load_config(config)
-        result = build_report(cfg)
+        result = build_report(cfg, publish=update_public_artifacts)
     except VisionXAIError as exc:
         logger.error("%s", exc)
         raise typer.Exit(1) from exc

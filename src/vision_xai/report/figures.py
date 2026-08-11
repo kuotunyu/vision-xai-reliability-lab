@@ -1,8 +1,8 @@
 """Matplotlib figures generated from the aggregated summary (Agg backend).
 
-Figures are written to ``results/derived/figures`` and mirrored into
-``assets/figures`` so the README can reference committed images; both copies
-come from the same raw results.
+Figures are written to the configured derived-results directory. Canonical
+``full`` reports may explicitly mirror them into ``assets/figures`` for the
+README; smoke and test reports never touch that public directory.
 """
 
 from __future__ import annotations
@@ -111,7 +111,9 @@ def _spurious_figure(plt: Any, variant: str, methods: dict[str, Any], path: Path
     plt.close(figure)
 
 
-def build_figures(summary: dict[str, Any], figures_dir: Path, assets_dir: Path) -> list[Path]:
+def build_figures(
+    summary: dict[str, Any], figures_dir: Path, assets_dir: Path | None = None
+) -> list[Path]:
     plt = _plt()
     figures_dir.mkdir(parents=True, exist_ok=True)
     produced: list[Path] = []
@@ -130,8 +132,13 @@ def build_figures(summary: dict[str, Any], figures_dir: Path, assets_dir: Path) 
         produced.append(path)
 
     produced = [path for path in produced if path.is_file()]
-    assets_dir.mkdir(parents=True, exist_ok=True)
-    for path in produced:
-        shutil.copy2(path, assets_dir / path.name)
-    logger.info("wrote %d figures to %s (mirrored to %s)", len(produced), figures_dir, assets_dir)
+    if assets_dir is not None:
+        assets_dir.mkdir(parents=True, exist_ok=True)
+        for path in produced:
+            shutil.copy2(path, assets_dir / path.name)
+        logger.info(
+            "wrote %d figures to %s (mirrored to %s)", len(produced), figures_dir, assets_dir
+        )
+    else:
+        logger.info("wrote %d figures to %s", len(produced), figures_dir)
     return produced

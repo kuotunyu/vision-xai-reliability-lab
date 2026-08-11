@@ -331,7 +331,20 @@ def inject_results(readme_path: Path, block: str) -> None:
     readme_path.write_text(updated, encoding="utf-8")
 
 
-def build_report(cfg: AppConfig, readme_paths: Sequence[Path] | None = None) -> ReportResult:
+def build_report(
+    cfg: AppConfig,
+    readme_paths: Sequence[Path] | None = None,
+    *,
+    publish: bool = False,
+) -> ReportResult:
+    """Build a report inside ``cfg.paths.results_dir``.
+
+    Public README and ``assets/figures`` mutation is opt-in and restricted to
+    the canonical ``full`` experiment. This keeps smoke/CI runs from replacing
+    committed benchmark evidence.
+    """
+    if publish and cfg.experiment_name != "full":
+        raise ReportError("public artifacts may be updated only for experiment 'full'")
     start = time.monotonic()
     summary = build_summary(cfg)
     derived = derived_dir(cfg)
@@ -339,7 +352,8 @@ def build_report(cfg: AppConfig, readme_paths: Sequence[Path] | None = None) -> 
     summary_path = derived / "summary.json"
     atomic_write_json(summary_path, summary)
 
-    figures = build_figures(summary, derived / "figures", Path("assets") / "figures")
+    public_figures = Path("assets") / "figures" if publish else None
+    figures = build_figures(summary, derived / "figures", public_figures)
 
     topk_key = (
         f"topk_iou_{cfg.evaluate.topk_fractions[min(1, len(cfg.evaluate.topk_fractions) - 1)]}"
@@ -348,7 +362,9 @@ def build_report(cfg: AppConfig, readme_paths: Sequence[Path] | None = None) -> 
     (derived / "summary.md").write_text(block + "\n", encoding="utf-8")
 
     resolved_readmes = list(
-        readme_paths if readme_paths is not None else (Path("README.md"), Path("README_zh-TW.md"))
+        readme_paths
+        if readme_paths is not None
+        else ((Path("README.md"), Path("README_zh-TW.md")) if publish else ())
     )
     updated: list[Path] = []
     for readme in resolved_readmes:
