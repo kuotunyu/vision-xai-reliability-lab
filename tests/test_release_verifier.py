@@ -33,7 +33,13 @@ def _copy_evidence(tmp_path: Path) -> Path:
         shutil.copytree(REPO_ROOT / directory, root / directory)
     for filename in ("README.md", "README_zh-TW.md"):
         shutil.copy2(REPO_ROOT / filename, root / filename)
-    for filename in ("ARTIFACTS.md", "DATA_CARD.md", "FAILURES.md", "MODEL_CARD.md"):
+    for filename in (
+        "ARTIFACTS.md",
+        "DATA_CARD.md",
+        "FAILURES.md",
+        "MODEL_CARD.md",
+        "OWNER_ACTIONS.md",
+    ):
         shutil.copy2(REPO_ROOT / filename, root / filename)
     return root
 
@@ -76,8 +82,10 @@ def test_release_verifier_accepts_committed_evidence() -> None:
     assert "CUDA resume canary evidence" in result.stdout
 
 
-def test_release_verifier_accepts_repository_boundary_during_development() -> None:
-    result = _run_verifier(REPO_ROOT, "--git", "--allow-dirty")
+def test_release_verifier_accepts_clean_candidate_repository(tmp_path: Path) -> None:
+    root = _copy_evidence(tmp_path)
+    _initialize_candidate_git(root)
+    result = _run_verifier(root, "--git")
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert "Git identity and history" in result.stdout
