@@ -14,11 +14,16 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["path", "role", "bytes", "sha256"],
+        "required": ["path", "role", "hash_mode", "bytes", "sha256"],
         "properties": {
           "path": {"type": "string", "minLength": 1},
           "role": {"type": "string", "minLength": 1},
-          "bytes": {"type": "integer", "minimum": 0},
+          "hash_mode": {"enum": ["binary", "text-lf"]},
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Raw bytes for binary mode; canonical LF bytes for text-lf mode."
+          },
           "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
         }
       }

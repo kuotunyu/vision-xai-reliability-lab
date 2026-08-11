@@ -101,6 +101,11 @@ def verify_artifact_hashes(root: Path) -> int:
         if not path.is_file():
             raise VerificationError(f"missing artifact: {relative}")
         payload = path.read_bytes()
+        hash_mode = entry.get("hash_mode")
+        if hash_mode == "text-lf":
+            payload = payload.replace(b"\r\n", b"\n")
+        elif hash_mode != "binary":
+            raise VerificationError(f"unsupported hash mode for {relative}: {hash_mode!r}")
         if len(payload) != entry.get("bytes"):
             raise VerificationError(f"size mismatch: {relative}")
         digest = hashlib.sha256(payload).hexdigest()
@@ -203,6 +208,39 @@ def verify_readme_synchronization(root: Path) -> None:
             raise VerificationError(f"{name} result block differs from summary.md")
 
 
+def verify_cuda_canary_evidence(root: Path) -> None:
+    schema = _load_json(root / "schemas" / "cuda-resume-canary.schema.json")
+    if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
+        raise VerificationError("CUDA canary schema must use JSON Schema 2020-12")
+    evidence = _load_json(root / "release" / "cuda-resume-canary.json")
+    if evidence.get("schema_version") != 1 or evidence.get("status") != "PASS":
+        raise VerificationError("CUDA resume canary is not a schema-v1 PASS")
+    scope = evidence.get("scope")
+    if not isinstance(scope, dict) or scope.get("not_full_scale") is not True:
+        raise VerificationError("CUDA canary does not disclose its non-full-scale scope")
+    execution = evidence.get("execution")
+    if not isinstance(execution, dict) or execution.get("external_compute_processes_at_start") != 0:
+        raise VerificationError("CUDA canary did not start with zero external compute processes")
+    if execution.get("process_isolation") != "three sequential fresh Python worker processes":
+        raise VerificationError("CUDA canary phases were not process-isolated")
+    comparisons = evidence.get("comparisons")
+    if not isinstance(comparisons, dict):
+        raise VerificationError("CUDA canary comparisons are missing")
+    for key in (
+        "head_state_exact",
+        "optimizer_state_exact",
+        "grad_scaler_state_exact",
+        "stable_metrics_exact",
+    ):
+        if comparisons.get(key) is not True:
+            raise VerificationError(f"CUDA resume canary comparison failed: {key}")
+    if comparisons.get("differences") != []:
+        raise VerificationError("CUDA resume canary reports state or metric differences")
+    scheduler = comparisons.get("scheduler_state")
+    if not isinstance(scheduler, dict) or scheduler.get("status") != "not_applicable":
+        raise VerificationError("CUDA canary scheduler boundary is not explicit")
+
+
 def _git(root: Path, *args: str) -> str:
     result = subprocess.run(
         ["git", "-C", str(root), *args],
@@ -298,11 +336,13 @@ def verify(root: Path, *, git: bool = False, allow_dirty: bool = False) -> list[
     summary = verify_summary_schema(root)
     verify_claim_invariants(summary)
     verify_readme_synchronization(root)
+    verify_cuda_canary_evidence(root)
     checks = [
         f"PASS artifact hashes ({artifact_count} files)",
         "PASS JSON schemas and full-summary shape",
         "PASS claim invariants",
         "PASS README synchronization",
+        "PASS CUDA resume canary evidence",
     ]
     if git:
         verify_git_identity_and_history(root, allow_dirty=allow_dirty)

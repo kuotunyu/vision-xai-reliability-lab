@@ -1,0 +1,98 @@
+{
+  "comparisons": {
+    "checkpoint_file_sha256_equal": true,
+    "differences": [],
+    "grad_scaler_state_exact": true,
+    "head_state_exact": true,
+    "optimizer_state_exact": true,
+    "scheduler_state": {
+      "reason": "the training loop does not instantiate a learning-rate scheduler",
+      "status": "not_applicable"
+    },
+    "stable_metrics_exact": true
+  },
+  "configuration": {
+    "amp": true,
+    "batch_size": 8,
+    "deterministic_algorithms": true,
+    "pretrained": false,
+    "seed": 42,
+    "tf32": false
+  },
+  "created_at": "2026-08-11T19:21:56.379566+00:00",
+  "equivalence_policy": {
+    "diagnostic_only": "whole-checkpoint SHA-256; serialization bytes are not the semantic state contract",
+    "required": "exact tensor/scalar equality for final head, optimizer, GradScaler, and stable metrics"
+  },
+  "execution": {
+    "external_compute_processes_at_start": 0,
+    "interrupted_epochs_first_call": 1,
+    "process_isolation": "three sequential fresh Python worker processes",
+    "reference_epochs_this_call": 2,
+    "resumed_epochs_second_call": 1
+  },
+  "hardware": {
+    "driver_version": "591.86",
+    "gpu": "NVIDIA GeForce RTX 4090"
+  },
+  "kind": "cuda_amp_epoch_boundary_resume_canary",
+  "limitations": [
+    "This tiny synthetic canary is not evidence that the full L4 experiment was resumed.",
+    "Checkpointing occurs at epoch boundaries; no unsafe mid-batch crash is simulated.",
+    "The training loop has no scheduler, so scheduler restoration is not applicable.",
+    "Results apply to the recorded hardware and software stack, not every CUDA stack."
+  ],
+  "metrics": {
+    "reference": [
+      {
+        "epoch": 1,
+        "lr": 0.001,
+        "train_loss": 1.480977,
+        "val_accuracy": 0.25,
+        "val_ece": 0.423048,
+        "val_macro_f1": 0.166667
+      },
+      {
+        "epoch": 2,
+        "lr": 0.001,
+        "train_loss": 1.339345,
+        "val_accuracy": 0.25,
+        "val_ece": 0.233647,
+        "val_macro_f1": 0.166667
+      }
+    ],
+    "resumed": [
+      {
+        "epoch": 1,
+        "lr": 0.001,
+        "train_loss": 1.480977,
+        "val_accuracy": 0.25,
+        "val_ece": 0.423048,
+        "val_macro_f1": 0.166667
+      },
+      {
+        "epoch": 2,
+        "lr": 0.001,
+        "train_loss": 1.339345,
+        "val_accuracy": 0.25,
+        "val_ece": 0.233647,
+        "val_macro_f1": 0.166667
+      }
+    ]
+  },
+  "schema_version": 1,
+  "scope": {
+    "dataset": "deterministic synthetic Oxford-IIIT Pet layout",
+    "epochs": 2,
+    "interruption": "supported epoch-boundary stop after epoch 1, then new-process-equivalent call with --resume",
+    "model": "convnext_tiny random backbone, classifier head only",
+    "not_full_scale": true
+  },
+  "software": {
+    "cudnn": "91900",
+    "python": "3.11.15",
+    "torch": "2.11.0+cu130",
+    "torch_cuda": "13.0"
+  },
+  "status": "PASS"
+}

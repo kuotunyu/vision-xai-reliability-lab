@@ -17,6 +17,8 @@ checkpoint, or attribution is committed.
 The release manifest and JSON schemas added by the hardening work are the
 integrity authority for these files. A local verifier checks their digests,
 schemas, README synchronization, claim invariants, and repository boundary.
+Text artifact hashes use canonical LF bytes so the contract is identical on
+Windows and Linux; binary figures are hashed byte-for-byte.
 
 ## What the evidence supports
 
@@ -39,6 +41,19 @@ deliberately excluded from the public candidate. The Oxford-IIIT Pet dataset
 and official pretrained weights must be downloaded from their original
 providers to reproduce training.
 
-The CUDA resume canary is separate evidence. It exercises interruption and
-resume on a tiny synthetic configuration and never writes into `results/` or
-`assets/`; it cannot overwrite or stand in for the full-scale experiment.
+## CUDA resume canary evidence
+
+`release/cuda-resume-canary.json` records a 2026-08-12 local canary on an RTX
+4090 (driver 591.86), Python 3.11.15, PyTorch 2.11.0+cu130, CUDA 13.0, and cuDNN
+9.19. Three fresh Python worker processes ran a two-epoch uninterrupted
+reference, a one-epoch controlled stop, and a resume for epoch 2. Final head,
+optimizer, GradScaler, and stable per-epoch metrics were exactly equal. The two
+serialized checkpoints also had equal SHA-256 digests, although whole-file
+equality is diagnostic rather than the semantic gate.
+
+This canary never writes into `results/` or `assets/`; it cannot overwrite or
+stand in for the full-scale experiment. It uses deterministic synthetic data,
+random backbone weights, and an epoch-boundary checkpoint. It does not claim
+that the full L4 experiment was resumed, does not simulate an unsafe mid-batch
+crash, and has no scheduler state to compare because the training loop does not
+instantiate a scheduler.

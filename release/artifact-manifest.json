@@ -5,68 +5,86 @@
     {
       "path": "assets/figures/faithfulness_cnn.png",
       "role": "full-scale aggregate figure",
+      "hash_mode": "binary",
       "bytes": 173574,
       "sha256": "59e374ba4930f852e970aefa39fed37024d6b875142c3695d3bc009095f84133"
     },
     {
       "path": "assets/figures/faithfulness_vit.png",
       "role": "full-scale aggregate figure",
+      "hash_mode": "binary",
       "bytes": 156137,
       "sha256": "f700f944e96ea48ae5df4bff94c30ab416476a048c785b8b7e9c6c4f190052e5"
     },
     {
       "path": "assets/figures/localization_cnn.png",
       "role": "full-scale aggregate figure",
+      "hash_mode": "binary",
       "bytes": 52121,
       "sha256": "8849fe835c8ede4767ec30f0ac50b2cd16eda98c6f8dba2bd064afac14c38d55"
     },
     {
       "path": "assets/figures/localization_vit.png",
       "role": "full-scale aggregate figure",
+      "hash_mode": "binary",
       "bytes": 47978,
       "sha256": "c9d12310b985af9ed82ccad480d05d25156edf8e2cc88f088195f70eaa20b2da"
     },
     {
       "path": "assets/figures/spurious_cnn_patched.png",
       "role": "full-scale aggregate figure",
+      "hash_mode": "binary",
       "bytes": 43693,
       "sha256": "fbfadcfb13e41a9ded9582b57ef9d2a224f6ed15e28beb546d4d707228bd6143"
     },
     {
       "path": "assets/figures/spurious_vit_patched.png",
       "role": "full-scale aggregate figure",
+      "hash_mode": "binary",
       "bytes": 44360,
       "sha256": "c53ee5c501d365712d8ccc2acc77ccc20aad5dff56895a83a649e47f3249e2f2"
     },
     {
       "path": "results/derived/summary.json",
       "role": "canonical full-scale aggregate",
-      "bytes": 62374,
-      "sha256": "5ce1cc7aff135c55902260605e75a415f02462e49dd3571135e803677ddace5f"
+      "hash_mode": "text-lf",
+      "bytes": 59826,
+      "sha256": "6883fcf95ff6df098dece245d4b99dafe315d3bacf410ffae6964fbd6275ebc4"
     },
     {
       "path": "results/derived/summary.md",
       "role": "generated README result block",
-      "bytes": 4559,
-      "sha256": "db2d18747bfed5b16b5c56280025637301904363c0a1276a3ea4669494c89d08"
+      "hash_mode": "text-lf",
+      "bytes": 4489,
+      "sha256": "317eb553cbf5a7c08aa1fed9c40d89418269edbdb05e967198d7445d83d2002a"
     },
     {
       "path": "results/raw/data_prepare/full/fingerprint.json",
       "role": "safe aggregate dataset fingerprint",
-      "bytes": 605,
-      "sha256": "dd2d7bb4fb24b457e05e17fc54fd53615422fd76c62db984759386dc396b467b"
+      "hash_mode": "text-lf",
+      "bytes": 586,
+      "sha256": "2682cdf9482d1594af23e03de90e367b3871aa27920eab6b87b330020bd0694c"
     },
     {
       "path": "results/raw/data_prepare/full/patch_summary.json",
       "role": "safe aggregate patch assignment counts",
-      "bytes": 780,
-      "sha256": "28a7b215facdc44722a6c4f3a6e6846920d189b58891de38435ac216f599d68b"
+      "hash_mode": "text-lf",
+      "bytes": 748,
+      "sha256": "81cd2a083a08a1aae1eb94804927ee515be8644c947baac032b4bd7928055c0b"
     },
     {
       "path": "results/raw/data_prepare/full/split_summary.json",
       "role": "safe aggregate split counts",
-      "bytes": 3496,
-      "sha256": "a15ab5788ac3fa79d7cffaed097b8b6e939d839c6642b8fcd37131c62ffc85fc"
+      "hash_mode": "text-lf",
+      "bytes": 3301,
+      "sha256": "9d5bda6ce16f060ad3098973a94d1c813aeae5e320205636f81395101247cbed"
+    },
+    {
+      "path": "release/cuda-resume-canary.json",
+      "role": "safe aggregate CUDA AMP resume evidence",
+      "hash_mode": "text-lf",
+      "bytes": 2878,
+      "sha256": "cf71bfab7066e205b12e6e658be0fe3ee1904c85007af2aee636ace9342041d3"
     }
   ]
 }

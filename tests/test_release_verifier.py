@@ -38,7 +38,7 @@ def _copy_evidence(tmp_path: Path) -> Path:
 
 def _refresh_summary_manifest(root: Path) -> None:
     summary_path = root / "results" / "derived" / "summary.json"
-    payload = summary_path.read_bytes()
+    payload = summary_path.read_bytes().replace(b"\r\n", b"\n")
     manifest_path = root / "release" / "artifact-manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     entry = next(
@@ -71,6 +71,7 @@ def test_release_verifier_accepts_committed_evidence() -> None:
     assert "artifact hashes" in result.stdout
     assert "claim invariants" in result.stdout
     assert "README synchronization" in result.stdout
+    assert "CUDA resume canary evidence" in result.stdout
 
 
 def test_release_verifier_accepts_repository_boundary_during_development() -> None:
@@ -91,6 +92,23 @@ def test_release_verifier_rejects_tampered_artifact(tmp_path: Path) -> None:
 
     assert result.returncode == 1
     assert "sha256 mismatch: results/derived/summary.json" in result.stderr
+
+
+def test_release_verifier_accepts_lf_checkout_of_text_artifacts(tmp_path: Path) -> None:
+    root = _copy_evidence(tmp_path)
+    for relative in (
+        "results/derived/summary.json",
+        "results/derived/summary.md",
+        "results/raw/data_prepare/full/fingerprint.json",
+        "results/raw/data_prepare/full/patch_summary.json",
+        "results/raw/data_prepare/full/split_summary.json",
+    ):
+        path = root / relative
+        path.write_bytes(path.read_bytes().replace(b"\r\n", b"\n"))
+
+    result = _run_verifier(root)
+
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_release_verifier_rejects_false_center_prior_claim(tmp_path: Path) -> None:
