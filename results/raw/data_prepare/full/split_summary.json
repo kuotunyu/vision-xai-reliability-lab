@@ -1,0 +1,196 @@
+{
+  "num_classes": 37,
+  "per_class": {
+    "00_Abyssinian": {
+      "test": 98,
+      "train": 80,
+      "val": 20
+    },
+    "01_american_bulldog": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "02_american_pit_bull_terrier": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "03_basset_hound": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "04_beagle": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "05_Bengal": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "06_Birman": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "07_Bombay": {
+      "test": 88,
+      "train": 77,
+      "val": 19
+    },
+    "08_boxer": {
+      "test": 99,
+      "train": 80,
+      "val": 20
+    },
+    "09_British_Shorthair": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "10_chihuahua": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "11_Egyptian_Mau": {
+      "test": 97,
+      "train": 74,
+      "val": 19
+    },
+    "12_english_cocker_spaniel": {
+      "test": 100,
+      "train": 77,
+      "val": 19
+    },
+    "13_english_setter": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "14_german_shorthaired": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "15_great_pyrenees": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "16_havanese": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "17_japanese_chin": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "18_keeshond": {
+      "test": 99,
+      "train": 80,
+      "val": 20
+    },
+    "19_leonberger": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "20_Maine_Coon": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "21_miniature_pinscher": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "22_newfoundland": {
+      "test": 100,
+      "train": 77,
+      "val": 19
+    },
+    "23_Persian": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "24_pomeranian": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "25_pug": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "26_Ragdoll": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "27_Russian_Blue": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "28_saint_bernard": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "29_samoyed": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "30_scottish_terrier": {
+      "test": 99,
+      "train": 80,
+      "val": 20
+    },
+    "31_shiba_inu": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "32_Siamese": {
+      "test": 100,
+      "train": 79,
+      "val": 20
+    },
+    "33_Sphynx": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "34_staffordshire_bull_terrier": {
+      "test": 89,
+      "train": 80,
+      "val": 20
+    },
+    "35_wheaten_terrier": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    },
+    "36_yorkshire_terrier": {
+      "test": 100,
+      "train": 80,
+      "val": 20
+    }
+  },
+  "schema_version": 1,
+  "totals": {
+    "test": 3669,
+    "train": 2944,
+    "val": 736
+  }
+}

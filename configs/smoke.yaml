@@ -1,0 +1,55 @@
+# Smoke config: tiny per-class subset, runs on CPU in minutes.
+# Note: torchvision still downloads the full ~800 MB archives once;
+# limit_per_class only bounds how many samples are processed.
+experiment_name: smoke
+seed: 42
+paths:
+  data_dir: data # relative to the working directory; override with VISION_XAI_DATA_DIR
+  results_dir: results
+evaluate:
+  deletion_steps: 10
+  topk_fractions: [0.05, 0.1, 0.2] # pre-registered; reported in full, never tuned on test
+  randomization_samples: 4
+  consistency_samples: 4
+  batch_size: 8
+explain:
+  split: test
+  num_samples: 16 # tiny fixed subset so every method finishes on CPU in minutes
+  batch_size: 4
+  ig_steps: 8
+  occlusion_window: 64
+  occlusion_stride: 48
+  # Deliberately below the project-wide "every 25-50 items" rule (full.yaml uses
+  # 25): smoke only explains 16 samples in total, so a 25-item interval would
+  # mean this config never exercises its own incremental-write path at all.
+  incremental_save_every: 8
+train:
+  epochs: 2
+  batch_size: 16
+  lr: 0.001
+  weight_decay: 0.0001
+  num_workers: 0
+  amp: true # effective only on CUDA (Colab); local CPU runs ignore it
+data:
+  dataset: oxford-iiit-pet
+  download: true
+  limit_per_class: 3 # 37*3=111 trainval + up to 111 test samples processed
+  image_size: 224
+  resize_size: 256
+  mask_policy: foreground # trimap boundary pixels (value 3) excluded from the pet mask
+  incremental_save_every: 32
+  split:
+    val_fraction: 0.2
+    seed: 42
+  spurious_patch:
+    enabled: true
+    corner: bottom_right
+    size_fraction: 0.15
+    margin_fraction: 0.02
+    pattern: checker
+    color: [255, 0, 255]
+    color2: [0, 0, 0]
+    target_group: cats # the 12 cat breeds; accepts an explicit class-id list too
+    p_patch_in_group: 0.9
+    p_patch_out_group: 0.1
+    test_variants: [correlated, no_patch, counter_correlated]

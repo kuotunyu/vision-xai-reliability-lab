@@ -1,0 +1,10 @@
+services:
+  vision-xai:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # weights / precomputed results / dataset manifests are mounted, never baked in
+      - ./checkpoints:/app/checkpoints:ro
+      - ./results:/app/results:ro
+      - ./data:/app/data:ro

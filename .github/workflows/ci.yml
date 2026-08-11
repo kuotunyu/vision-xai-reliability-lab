@@ -1,0 +1,30 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v8
+        with:
+          enable-cache: true
+          python-version: "3.11"
+          cache-dependency-glob: "uv.lock"
+      - run: uv sync --frozen
+      - run: uv run ruff format --check .
+      - run: uv run ruff check .
+      - run: uv run mypy src tests app
+      # Tests use PIL-generated synthetic fixtures only — no dataset, no GPU.
+      - run: uv run pytest -m "not real_data" --cov=vision_xai --cov=app --cov-report=term
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t vision-xai:ci .
+      - run: docker run --rm vision-xai:ci python -m vision_xai.cli self-check --quiet

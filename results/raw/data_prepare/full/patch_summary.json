@@ -1,0 +1,33 @@
+{
+  "assignments": {
+    "test_correlated": {
+      "num_in_group": 1183,
+      "num_samples": 3669,
+      "patched_in_group": 1051,
+      "patched_out_group": 267
+    },
+    "test_counter_correlated": {
+      "num_in_group": 1183,
+      "num_samples": 3669,
+      "patched_in_group": 117,
+      "patched_out_group": 2236
+    },
+    "test_no_patch": {
+      "num_in_group": 1183,
+      "num_samples": 3669,
+      "patched_in_group": 0,
+      "patched_out_group": 0
+    },
+    "train_correlated": {
+      "num_in_group": 950,
+      "num_samples": 2944,
+      "patched_in_group": 873,
+      "patched_out_group": 210
+    }
+  },
+  "enabled": true,
+  "p_patch_in_group": 0.9,
+  "p_patch_out_group": 0.1,
+  "schema_version": 1,
+  "target_group": "cats"
+}

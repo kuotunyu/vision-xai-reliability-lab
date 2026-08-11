@@ -1,0 +1,39 @@
+# dataset, manifests and any downloaded archives — never committed
+# (anchored to the repo root: src/vision_xai/data/ is source code)
+/data/
+
+# virtualenv / tooling caches
+.venv/
+__pycache__/
+*.pyc
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.artifacts/
+dist/
+build/
+*.egg-info/
+
+# secrets / local env
+.env
+
+# model weights / checkpoints (later stages)
+*.pt
+*.pth
+*.ckpt
+/checkpoints/
+
+# raw results are commit-eligible only for small summary JSONs
+results/raw/*
+!results/raw/.gitkeep
+!results/raw/data_prepare/
+results/derived/*
+!results/derived/.gitkeep
+!results/derived/summary.json
+!results/derived/summary.md
+
+# OS noise
+.DS_Store
+Thumbs.db

@@ -1,0 +1,50 @@
+# Full config: the entire Oxford-IIIT Pet dataset (trainval 3680 / test 3669).
+experiment_name: full
+seed: 42
+paths:
+  data_dir: data # relative to the working directory; override with VISION_XAI_DATA_DIR
+  results_dir: results
+evaluate:
+  deletion_steps: 20
+  topk_fractions: [0.05, 0.1, 0.2] # pre-registered; reported in full, never tuned on test
+  randomization_samples: 50
+  consistency_samples: 50
+  batch_size: 16
+explain:
+  split: test
+  num_samples: 500 # fixed first-500-by-id benchmark subset (Colab GPU time budget)
+  batch_size: 16
+  ig_steps: 32
+  occlusion_window: 32
+  occlusion_stride: 16
+  incremental_save_every: 25
+train:
+  epochs: 5
+  batch_size: 64
+  lr: 0.001
+  weight_decay: 0.0001
+  num_workers: 2
+  amp: true # effective only on CUDA (Colab)
+data:
+  dataset: oxford-iiit-pet
+  download: true
+  limit_per_class: null
+  image_size: 224
+  resize_size: 256
+  mask_policy: foreground # trimap boundary pixels (value 3) excluded from the pet mask
+  incremental_save_every: 32
+  split:
+    val_fraction: 0.2
+    seed: 42
+  spurious_patch:
+    enabled: true
+    corner: bottom_right
+    size_fraction: 0.15
+    margin_fraction: 0.02
+    pattern: checker
+    color: [255, 0, 255]
+    color2: [0, 0, 0]
+    target_group: cats # the 12 cat breeds; accepts an explicit class-id list too
+    p_patch_in_group: 0.9
+    p_patch_out_group: 0.1
+    test_variants: [correlated, no_patch, counter_correlated]
