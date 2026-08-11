@@ -10,17 +10,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v8
         with:
           enable-cache: true
           python-version: "3.11"
           cache-dependency-glob: "uv.lock"
-      - run: uv sync --frozen
-      - run: uv run ruff format --check .
-      - run: uv run ruff check .
-      - run: uv run mypy src tests app
+      - run: uv sync --frozen --no-editable
+      - run: uv run --no-sync ruff format --check .
+      - run: uv run --no-sync ruff check .
+      - run: uv run --no-sync mypy src tests app tools
       # Tests use PIL-generated synthetic fixtures only — no dataset, no GPU.
-      - run: uv run pytest -m "not real_data" --cov=vision_xai --cov=app --cov-report=term
+      - run: uv run --no-sync pytest -m "not real_data" --cov=vision_xai --cov=app --cov-report=term
+      - run: uv run --no-sync python tools/verify_release.py --root . --git
+      - run: uv build --out-dir .artifacts/dist
+      - name: Audit and smoke built distributions
+        run: |
+          wheel="$(find .artifacts/dist -maxdepth 1 -name '*.whl' -print -quit)"
+          sdist="$(find .artifacts/dist -maxdepth 1 -name '*.tar.gz' -print -quit)"
+          uv run --no-sync python tools/audit_distribution.py --wheel "$wheel" --sdist "$sdist"
+          uv pip install --python .venv/bin/python --reinstall --no-deps "$wheel"
+          .venv/bin/python -I -c "import vision_xai; assert vision_xai.__version__ == '0.1.0'"
+          .venv/bin/python -I -m vision_xai.cli self-check --quiet
 
   docker:
     runs-on: ubuntu-latest
@@ -28,3 +40,19 @@ jobs:
       - uses: actions/checkout@v4
       - run: docker build -t vision-xai:ci .
       - run: docker run --rm vision-xai:ci python -m vision_xai.cli self-check --quiet
+      - name: Health, API, and Gradio smoke
+        run: |
+          docker run -d --name vision-xai-ci-smoke -p 8000:8000 vision-xai:ci
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:8000/health >/dev/null; then break; fi
+            sleep 2
+          done
+          curl --fail --silent http://127.0.0.1:8000/health
+          curl --fail --silent http://127.0.0.1:8000/methods
+          curl --fail --silent --location http://127.0.0.1:8000/demo/ >/dev/null
+      - name: Container logs
+        if: always()
+        run: docker logs vision-xai-ci-smoke || true
+      - name: Remove smoke container
+        if: always()
+        run: docker rm --force vision-xai-ci-smoke || true
