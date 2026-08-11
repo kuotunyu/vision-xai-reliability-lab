@@ -26,6 +26,8 @@ DEFAULT_OUTPUT_ROOT = Path(".artifacts/cuda-resume-canary")
 DEFAULT_LEASE_PATH = Path(tempfile.gettempdir()) / "codex-rtx4090-compute.lease"
 CANARY_SCHEMA_VERSION = 1
 GPU_METADATA_FIELD_COUNT = 2
+PMON_MIN_FIELDS = 3
+PMON_TYPE_INDEX = 2
 IMAGE_SIZE = 64
 TRAINVAL_PER_CLASS = 6
 TEST_PER_CLASS = 3
@@ -60,14 +62,16 @@ def _run_command(*args: str) -> str:
 
 
 def _compute_processes() -> list[str]:
-    output = _run_command(
-        "nvidia-smi",
-        "--query-compute-apps=pid,process_name,used_gpu_memory",
-        "--format=csv,noheader,nounits",
-    )
-    if not output or "No running processes found" in output:
-        return []
-    return [line.strip() for line in output.splitlines() if line.strip()]
+    output = _run_command("nvidia-smi", "pmon", "-c", "1")
+    compute: list[str] = []
+    for line in output.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        fields = stripped.split()
+        if len(fields) >= PMON_MIN_FIELDS and fields[PMON_TYPE_INDEX] == "C":
+            compute.append(stripped)
+    return compute
 
 
 def _gpu_metadata() -> dict[str, str]:

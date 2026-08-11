@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import tools.cuda_resume_canary as canary
 import torch
 from tools.cuda_resume_canary import (
     CanaryError,
@@ -81,3 +82,16 @@ def test_external_gpu_lease_is_never_removed(tmp_path: Path) -> None:
         pass
 
     assert lease_path.read_text(encoding="utf-8") == '{"token": "external"}\n'
+
+
+def test_wddm_desktop_processes_are_not_misclassified_as_compute(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    pmon = """# gpu pid type sm mem enc dec jpg ofa fb ccpm command
+0 1524 C+G - - - - - - 0 0 dwm.exe
+0 24128 C+G - - - - - - 0 0 ChatGPT.exe
+0 31000 C 12 4 - - - - 512 0 python.exe
+"""
+    monkeypatch.setattr(canary, "_run_command", lambda *args: pmon)
+
+    assert canary._compute_processes() == ["0 31000 C 12 4 - - - - 512 0 python.exe"]
