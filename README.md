@@ -44,6 +44,10 @@ fixed **500-sample subset** of the test split, not the complete test split. The
 immutable aggregate and provenance are documented in
 [ARTIFACTS.md](ARTIFACTS.md).
 
+The weight-free [static results showcase source](showcase/) turns those
+committed aggregates into a focused portfolio walkthrough. It loads no model,
+dataset, backend, analytics, or external JavaScript.
+
 ## Project status
 
 | Stage | Scope | Status |

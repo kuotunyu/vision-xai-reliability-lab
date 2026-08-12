@@ -37,6 +37,9 @@ stability 與 spurious cue。
 Attribution-derived metrics 使用 test split 中固定的 **500 samples**，不是完整 test split。
 不可變的 aggregate 與來源紀錄見 [ARTIFACTS.md](ARTIFACTS.md)。
 
+不含 weights 的[靜態結果展示原始檔](showcase/)會把這些 committed aggregates
+整理成作品集導覽；它不載入模型、資料集、後端服務、analytics 或外部 JavaScript。
+
 ## 專案進度
 
 | 階段 | 範圍 | 狀態 |

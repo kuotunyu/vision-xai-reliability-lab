@@ -102,6 +102,22 @@ def test_readmes_lead_with_portfolio_evidence() -> None:
         assert text.index("assets/portfolio/hero.png") < text.index(status_heading)
         assert "github.com/kuotunyu/vision-xai-reliability-lab/actions/workflows/ci.yml" in text
         assert "kuotunyu.github.io/vision-xai-reliability-lab/" in text
+        assert "(showcase/)" in text
+
+
+def test_owner_actions_capture_github_portfolio_handoff() -> None:
+    text = (REPO_ROOT / "OWNER_ACTIONS.md").read_text(encoding="utf-8")
+    expected = (
+        "Repository description",
+        "computer-vision",
+        "trustworthy-ai",
+        "assets/portfolio/social-preview.png",
+        "GitHub Actions",
+        "push `main`",
+        "Pin the repository",
+    )
+    for phrase in expected:
+        assert phrase in text
 
 
 def test_generated_result_tables_are_collapsible() -> None:

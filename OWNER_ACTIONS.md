@@ -1,18 +1,42 @@
 # Owner actions after local release-candidate approval
 
-No remote, deployment, model-hosting, or release state is changed by the local
-release workflow. The repository owner can perform these actions later:
+No remote, deployment, model-hosting, tag, or release state is changed by the
+local release workflow. The repository owner can perform the steps below after
+reviewing the final local commit.
 
-1. Review the three headline findings and the evidence boundary in
-   `README.md`, `MODEL_CARD.md`, `DATA_CARD.md`, and `ARTIFACTS.md`.
-2. Run the documented CPU release gates from a clean checkout and confirm that
-   the hosted CI passes without datasets, weights, a GPU, or secrets.
-3. Create the public remote and push `main` manually. Do not add the raw Oxford
-   dataset, checkpoints, pretrained weights, or ignored `.artifacts/` outputs.
-4. Verify rendered README links, figures, license metadata, API documentation,
-   and the `/demo` route on the chosen hosting platform.
-5. Only after the pushed commit passes CI, decide whether to create a version
-   tag or release. The local candidate intentionally has neither.
+## GitHub repository setup
+
+1. Create an empty **public** repository named
+   `vision-xai-reliability-lab`. Do not initialize it with another README,
+   license, or `.gitignore`.
+2. Configure the repository **About** panel:
+   - Repository description: `Reliability-first XAI benchmark for ConvNeXt and
+     ViT: localization baselines, faithfulness, sanity checks, and reproducible
+     CUDA resume evidence.`
+   - Topics: `computer-vision`, `explainable-ai`, `trustworthy-ai`, `pytorch`,
+     `machine-learning`, `model-evaluation`, `reproducibility`, `fastapi`, and
+     `gradio`.
+   - Website: `https://kuotunyu.github.io/vision-xai-reliability-lab/` after
+     Pages succeeds.
+3. In **Settings → General → Social preview**, upload
+   `assets/portfolio/social-preview.png`.
+4. In **Settings → Pages**, select **GitHub Actions** as the build and
+   deployment source.
+5. Add the GitHub remote locally and push `main` manually. Do not add the raw
+   Oxford-IIIT Pet dataset, checkpoints, pretrained weights, or ignored
+   `.artifacts/` outputs.
+6. Confirm that both `ci` jobs pass and that the `pages` workflow publishes the
+   18-file allowlisted showcase. Verify the README hero, local links, license,
+   Pages model switch, and public JSON/document links in the GitHub UI.
+7. Pin the repository on the GitHub profile after those checks pass.
+
+## Release decision
+
+Only after the pushed commit passes CI should the owner decide whether to
+create a version tag or GitHub Release. The local candidate intentionally has
+neither. The Pages site is a static results showcase, not a live inference
+demo; it needs no API deployment, GPU, dataset, model weight, account token, or
+project secret.
 
 Do not rerun or replace the committed full-scale L4 aggregate merely to publish
 the repository. Any future broader claims require separately recorded evidence.
