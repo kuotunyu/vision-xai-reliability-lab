@@ -12,6 +12,7 @@ __pycache__/
 .coverage
 htmlcov/
 .artifacts/
+.superpowers/
 dist/
 build/
 *.egg-info/
