@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import sys
 from dataclasses import dataclass
@@ -16,11 +17,16 @@ BASELINES = {"center", "random", "uniform"}
 INK = "#07131D"
 PANEL = "#0C1D29"
 IVORY = "#F4F0E6"
-MUTED = "#8EA3AF"
+MUTED = "#A9BBC4"
 CYAN = "#42D9E8"
 LIME = "#C7F464"
 CORAL = "#FF8066"
 GRID = "#193340"
+CJK_FONT_CANDIDATES = (
+    Path("C:/Windows/Fonts/NotoSansTC-VF.ttf"),
+    Path("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"),
+    Path("/usr/share/fonts/opentype/noto/NotoSansCJKtc-Regular.otf"),
+)
 
 
 class PortfolioAssetError(RuntimeError):
@@ -100,7 +106,21 @@ def extract_portfolio_metrics(summary: dict[str, Any]) -> PortfolioMetrics:
         raise PortfolioAssetError("canonical full summary has an unexpected shape") from exc
 
 
-def _font(size: int, *, bold: bool = False, mono: bool = False) -> ImageFont.FreeTypeFont:
+def _font(
+    size: int, *, bold: bool = False, mono: bool = False, cjk: bool = False
+) -> ImageFont.FreeTypeFont:
+    if cjk:
+        for path in CJK_FONT_CANDIDATES:
+            if path.is_file():
+                font = ImageFont.truetype(path, size=size)
+                if bold:
+                    with contextlib.suppress(OSError):
+                        font.set_variation_by_name("Bold")
+                return font
+        family = "Noto Sans CJK TC"
+        properties = font_manager.FontProperties(family=family, weight="bold" if bold else "normal")
+        resolved = font_manager.findfont(properties, fallback_to_default=True)
+        return ImageFont.truetype(resolved, size=size)
     family = "DejaVu Sans Mono" if mono else "DejaVu Sans"
     properties = font_manager.FontProperties(family=family, weight="bold" if bold else "normal")
     return ImageFont.truetype(font_manager.findfont(properties), size=size)
@@ -118,43 +138,108 @@ def _render_social(metrics: PortfolioMetrics) -> Image.Image:
     draw = ImageDraw.Draw(image)
     _draw_grid(draw, 1280, 640, spacing=64)
     draw.rectangle((0, 0, 14, 640), fill=CYAN)
-    draw.text((62, 48), "VISION XAI / RELIABILITY LAB", font=_font(25, bold=True), fill=CYAN)
-    draw.text((58, 94), "DOES THE HEATMAP", font=_font(58, bold=True), fill=IVORY)
-    draw.text((58, 158), "SURVIVE CONTACT", font=_font(58, bold=True), fill=IVORY)
-    draw.text((58, 222), "WITH EVIDENCE?", font=_font(58, bold=True), fill=IVORY)
+    draw.text((60, 42), "VISION XAI / RELIABILITY LAB", font=_font(22, bold=True), fill=CYAN)
+    draw.text(
+        (944, 48),
+        "FULL-SCALE EVIDENCE / 01",
+        font=_font(15, mono=True),
+        fill=MUTED,
+    )
+    draw.text(
+        (56, 92),
+        "視覺解釋的可靠性驗證",
+        font=_font(62, bold=True, cjk=True),
+        fill=IVORY,
+    )
+    draw.text(
+        (60, 176),
+        "ConvNeXt-Tiny \N{MULTIPLICATION SIGN} ViT-B/16",
+        font=_font(27, bold=True),
+        fill=IVORY,
+    )
+    draw.text(
+        (458, 183),
+        "Localization · Faithfulness · Model Randomization · Spurious Patch",
+        font=_font(17),
+        fill=MUTED,
+    )
+    draw.line((60, 238, 1220, 238), fill=CYAN, width=2)
 
     spurious_spread = max(
         metrics.cnn_spurious_accuracy_spread, metrics.vit_spurious_accuracy_spread
     )
     cards = (
-        (58, CYAN, f"{metrics.center_pointing:.3f}", "CENTER PRIOR", "beats learned attribution"),
         (
-            470,
-            CORAL,
-            f"{metrics.cnn_ig_randomization:.3f}",
-            "IG / RANDOMIZED",
-            "similarity remains high",
+            58,
+            CYAN,
+            "LOCALIZATION",
+            f"{metrics.center_pointing:.3f}",
+            "Center Prior 勝出",
+            "Best Attribution",
+            (
+                f"CNN {metrics.cnn_best_attribution_pointing:.3f}"
+                f" · ViT {metrics.vit_best_attribution_pointing:.3f}"
+            ),
         ),
         (
-            882,
+            458,
+            CORAL,
+            "SANITY CHECK",
+            f"{metrics.cnn_ig_randomization:.3f}",
+            "IG 未通過 Model Randomization",
+            "Randomization 後仍相似",
+            f"CNN {metrics.cnn_ig_randomization:.3f} · ViT {metrics.vit_ig_randomization:.3f}",
+        ),
+        (
+            858,
             LIME,
+            "NEGATIVE RESULT",
             f"≤{spurious_spread:.3f}",
-            "PATCH ΔACC",
-            "negative result",
+            "Spurious Patch 負結果",
+            "Accuracy spread",
+            (
+                f"CNN {metrics.cnn_spurious_accuracy_spread:.3f}"
+                f" · ViT {metrics.vit_spurious_accuracy_spread:.3f}"
+            ),
         ),
     )
-    for left, accent, value, title, detail in cards:
+    for index, (left, accent, category, value, title, detail, detail_value) in enumerate(
+        cards, start=1
+    ):
         draw.rounded_rectangle(
-            (left, 350, left + 350, 536), radius=18, fill=PANEL, outline=GRID, width=2
+            (left, 278, left + 364, 530), radius=16, fill=PANEL, outline=GRID, width=2
         )
-        draw.text((left + 22, 369), value, font=_font(45, bold=True), fill=accent)
-        draw.text((left + 22, 429), title, font=_font(18, bold=True), fill=IVORY)
-        draw.text((left + 22, 466), detail, font=_font(15), fill=MUTED)
+        draw.text(
+            (left + 24, 300),
+            f"0{index} / {category}",
+            font=_font(14, mono=True),
+            fill=accent,
+        )
+        draw.text((left + 22, 334), value, font=_font(54, bold=True), fill=accent)
+        draw.text(
+            (left + 24, 407),
+            title,
+            font=_font(21, bold=True, cjk=True),
+            fill=IVORY,
+        )
+        draw.text(
+            (left + 24, 453),
+            detail,
+            font=_font(16, cjk=True),
+            fill=MUTED,
+        )
+        draw.text(
+            (left + 24, 477),
+            detail_value,
+            font=_font(15),
+            fill=MUTED,
+        )
+        draw.line((left + 24, 510, left + 340, 510), fill=accent, width=2)
     draw.text(
-        (60, 580),
-        f"FULL L4 RUN  /  FIXED {metrics.attribution_subset}-SAMPLE ATTRIBUTION SUBSET"
-        "  /  AUDITABLE ARTIFACTS",
-        font=_font(15, mono=True),
+        (60, 576),
+        f"完整 L4 run  /  固定 {metrics.attribution_subset}-sample Attribution subset"
+        "  /  SHA-256 可驗證 artifacts",
+        font=_font(16, cjk=True),
         fill=MUTED,
     )
     return image
