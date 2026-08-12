@@ -126,6 +126,7 @@ def test_primary_ci_builds_showcase_without_deployment() -> None:
     workflow = yaml.safe_load(
         (REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
     )
+    assert workflow["permissions"] == {"contents": "read"}
     quality_steps = workflow["jobs"]["quality"]["steps"]
     commands = "\n".join(step.get("run", "") for step in quality_steps)
 
