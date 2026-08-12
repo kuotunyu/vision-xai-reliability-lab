@@ -1,33 +1,26 @@
 # vision-xai-reliability-lab（繁體中文）
 
-比較 CNN（**ConvNeXt-Tiny**）與 Vision Transformer（**ViT-B/16**）在
-**Oxford-IIIT Pet** 上的 attribution methods，並且不只產生漂亮的 heatmap，而是
-量化檢驗 explanation 是否**可靠**：以 segmentation mask 驗證 localization、
-deletion / insertion faithfulness、parameter randomization 檢查、augmentation
-consistency，以及 synthetic spurious-cue 實驗。
-
-> Heatmap 不等於因果推理的證據。本 repo 量測 attribution 方法在哪些情況成立、
-> 在哪些情況失效。
+**一個以可靠性為優先的 XAI benchmark，實際驗證「看起來合理」的
+heatmap 為什麼仍可能失敗。** 本專案比較 ConvNeXt-Tiny 與 ViT-B/16，
+並分開測量 localization、causal faithfulness、model randomization、
+stability 與 spurious cue。
 
 [English README → README.md](README.md)
 
-## 專案進度
+![Vision XAI reliability evidence](assets/portfolio/hero.png)
 
-| 階段 | 範圍 | 狀態 |
-|---|---|---|
-| 0 | Repo 骨架：uv 打包、lint / type / test gates、Docker CPU smoke、CI | ✅ 完成 |
-| 1 | 資料管線：固定 split、manifest 與 fingerprint、trimap 對齊 mask、spurious patch 指派、`--resume` | ✅ 完成 |
-| 2 | 訓練（classifier head、CUDA 上 AMP、每 epoch checkpoint、`--resume`） | ✅ 完成 |
-| 3 | Explainers：Grad-CAM、Integrated Gradients、Occlusion ＋ random/uniform/center baselines（統一 `explain()` 介面） | ✅ 完成 |
-| 4 | 可靠性評測：energy-in-mask、pointing game、top-k IoU、deletion / insertion AUC、randomization、flip consistency、patch energy | ✅ 完成 |
-| 5 | 報告產生（`results/derived/summary.json` → README 的所有數字） | ✅ 完成 |
-| 6 | 部署：FastAPI（`/health` `/predict` `/explain` `/methods`）＋ Gradio `/demo` | ✅ 完成 |
+[![CI](https://github.com/kuotunyu/vision-xai-reliability-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/kuotunyu/vision-xai-reliability-lab/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-CPU%20CI-EE4C2C?logo=pytorch&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-2EA44F.svg)](LICENSE)
 
-下方數字來自 **full 規模實跑**：四個變體都在 Google Colab NVIDIA L4 上以完整資料集訓練。
-不可變的聚合證據與來源紀錄見 [ARTIFACTS.md](ARTIFACTS.md)。
-Attribution 與可靠性指標是在 test split 的固定子集上計算（attribution 方法計算成本高），
-確切規模直接寫在下方自動產生的區塊裡。另有 `smoke` config 可在 CPU 上幾分鐘跑完同一條
-流程，用於驗證機制。
+> **Heatmap 不是因果推理的證據。** 這裡不只展示 explanation，而是量測它們在哪裡
+> 成立、在哪裡失敗，並保護證據不被 smoke 或 CI 悄悄改寫。
+
+[→ 瀏覽結果](https://kuotunyu.github.io/vision-xai-reliability-lab/)
+· [→ 本機重現](#快速開始)
+· [→ 審核證據](ARTIFACTS.md)
+· [→ 閱讀 Model Card](MODEL_CARD.md)
 
 ## 這次實驗真正發現了什麼
 
@@ -40,11 +33,31 @@ Attribution 與可靠性指標是在 test split 的固定子集上計算（attri
 3. Spurious-patch 實驗是**負結果**。在 frozen-backbone、head-only 訓練設定下，
    模型沒有學到預期的 shortcut；這不能被解讀為 vision model 普遍抵抗 spurious cue。
 
+這些數字來自真實的 **full-scale L4 run**：四個 classifier heads 以完整資料集訓練。
+Attribution-derived metrics 使用 test split 中固定的 **500 samples**，不是完整 test split。
+不可變的 aggregate 與來源紀錄見 [ARTIFACTS.md](ARTIFACTS.md)。
+
+## 專案進度
+
+| 階段 | 範圍 | 狀態 |
+|---|---|---|
+| 0 | Packaging、lint/type/test gates、Docker CPU path、CI | ✅ 完成 |
+| 1 | 決定性資料管線、manifest、fingerprint、mask、resume | ✅ 完成 |
+| 2 | Head-only training、CUDA AMP、checkpoint、`--resume` | ✅ 完成 |
+| 3 | Grad-CAM、Integrated Gradients、Occlusion 與三個 baselines | ✅ 完成 |
+| 4 | Localization、faithfulness、sanity、stability、spurious-cue evaluation | ✅ 完成 |
+| 5 | Machine-generated report 與不可變公開 aggregates | ✅ 完成 |
+| 6 | FastAPI ＋ Gradio，weights 延遲載入 | ✅ 完成 |
+
 ## 實驗結果（自動產生）
 
 以下標記之間的內容由 `results/derived/summary.json` 產生，不手填。
 Report 預設不會修改公開證據；只有 canonical full experiment 可在審查後以
 `--update-public-artifacts` 明確選擇更新。
+
+<details>
+<summary><strong>展開完整 machine-generated 結果表格</strong></summary>
+
 
 <!-- RESULTS:BEGIN -->
 **Experiment `full`** — generated 2026-07-25T14:53:10.938993+00:00
@@ -118,6 +131,8 @@ _experiment 'full': trained on the full dataset; explanations computed on the fi
 
 _A heatmap is not proof of causal reasoning._
 <!-- RESULTS:END -->
+
+</details>
 
 ## 快速開始
 

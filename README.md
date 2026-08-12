@@ -1,36 +1,27 @@
 # vision-xai-reliability-lab
 
-Compare attribution methods between a CNN (**ConvNeXt-Tiny**) and a Vision
-Transformer (**ViT-B/16**) on **Oxford-IIIT Pet**, and — instead of stopping at
-pretty heatmaps — quantitatively test whether the explanations are *reliable*:
-localization against segmentation masks, deletion/insertion faithfulness,
-parameter-randomization sanity checks, augmentation consistency, and a
-synthetic spurious-cue experiment.
+**A reliability-first XAI benchmark showing why visually plausible heatmaps
+can still fail.** ConvNeXt-Tiny and ViT-B/16 are evaluated on Oxford-IIIT Pet
+with localization, causal faithfulness, model-randomization sanity checks,
+stability, and a deliberately falsifiable spurious-cue experiment.
 
-> A heatmap is not proof of causal reasoning. This repo measures where
-> attribution methods hold up and where they break.
+[繁體中文 → README_zh-TW.md](README_zh-TW.md)
 
-[繁體中文說明 → README_zh-TW.md](README_zh-TW.md)
+![Vision XAI reliability evidence](assets/portfolio/hero.png)
 
-## Project status
+[![CI](https://github.com/kuotunyu/vision-xai-reliability-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/kuotunyu/vision-xai-reliability-lab/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-CPU%20CI-EE4C2C?logo=pytorch&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-2EA44F.svg)](LICENSE)
 
-| Stage | Scope | Status |
-|---|---|---|
-| 0 | Repo scaffold: packaging (uv), lint/type/test gates, Docker CPU smoke path, CI | ✅ done |
-| 1 | Data pipeline: deterministic splits, manifest + fingerprint, trimap-aligned masks, spurious-patch assignments, `--resume` | ✅ done |
-| 2 | Training (classifier heads, AMP on CUDA, per-epoch checkpoints, `--resume`) | ✅ done |
-| 3 | Explainers: Grad-CAM, Integrated Gradients, Occlusion + random/uniform/center baselines behind one `explain()` interface | ✅ done |
-| 4 | Reliability evaluation: energy-in-mask, pointing game, top-k IoU, deletion/insertion AUC, randomization, flip consistency, patch energy | ✅ done |
-| 5 | Report generation (`results/derived/summary.json` → all README numbers) | ✅ done |
-| 6 | Serving: FastAPI (`/health` `/predict` `/explain` `/methods`) + Gradio at `/demo` | ✅ done |
+> **A heatmap is not proof of causal reasoning.** This project measures where
+> attribution methods hold up, where they break, and whether the evidence can
+> be reproduced without quietly moving the goalposts.
 
-The numbers below are the **full-scale run**: all four variants trained on the
-complete dataset on a Google Colab NVIDIA L4. The immutable aggregate evidence
-and its provenance are documented in [ARTIFACTS.md](ARTIFACTS.md).
-Attribution and reliability metrics are computed on a fixed subset of the test
-split (attribution methods are expensive) — the exact scale is stated in the
-generated block itself. The repo also ships a `smoke` config that runs the same
-chain on CPU in minutes, for verifying the mechanics.
+[→ Explore the results](https://kuotunyu.github.io/vision-xai-reliability-lab/)
+· [→ Reproduce locally](#quickstart)
+· [→ Audit the evidence](ARTIFACTS.md)
+· [→ Read the model card](MODEL_CARD.md)
 
 ## What this experiment found
 
@@ -47,12 +38,34 @@ chain on CPU in minutes, for verifying the mechanics.
    shortcut. This is not evidence that vision models generally resist
    spurious cues.
 
+These are real full-scale results: all four classifier heads trained on the
+complete dataset on a Google Colab NVIDIA L4. Attribution-derived metrics use a
+fixed **500-sample subset** of the test split, not the complete test split. The
+immutable aggregate and provenance are documented in
+[ARTIFACTS.md](ARTIFACTS.md).
+
+## Project status
+
+| Stage | Scope | Status |
+|---|---|---|
+| 0 | Packaging, lint/type/test gates, Docker CPU path, CI | ✅ done |
+| 1 | Deterministic data pipeline, manifest, fingerprint, masks, resume | ✅ done |
+| 2 | Head-only training, CUDA AMP, checkpoints, `--resume` | ✅ done |
+| 3 | Grad-CAM, Integrated Gradients, Occlusion + three baselines | ✅ done |
+| 4 | Localization, faithfulness, sanity, stability, spurious-cue evaluation | ✅ done |
+| 5 | Machine-generated report and immutable public aggregates | ✅ done |
+| 6 | FastAPI + Gradio application, with lazy weight loading | ✅ done |
+
 ## Results (generated)
 
 Everything between the markers below is generated from
 `results/derived/summary.json`; nothing is typed in by hand. Report generation
 does not modify public evidence by default. Only the canonical full experiment
 may opt in with `--update-public-artifacts` after review.
+
+<details>
+<summary><strong>Full machine-generated result tables</strong></summary>
+
 
 <!-- RESULTS:BEGIN -->
 **Experiment `full`** — generated 2026-07-25T14:53:10.938993+00:00
@@ -126,6 +139,8 @@ _experiment 'full': trained on the full dataset; explanations computed on the fi
 
 _A heatmap is not proof of causal reasoning._
 <!-- RESULTS:END -->
+
+</details>
 
 ## Quickstart
 

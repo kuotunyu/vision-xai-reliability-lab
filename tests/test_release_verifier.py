@@ -8,6 +8,8 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+RESULTS_BEGIN = "<!-- RESULTS:BEGIN -->"
+RESULTS_END = "<!-- RESULTS:END -->"
 
 
 def _run_verifier(root: Path, *extra_args: str) -> subprocess.CompletedProcess[str]:
@@ -90,6 +92,24 @@ def test_release_manifest_covers_portfolio_visuals() -> None:
 
     assert "assets/portfolio/hero.png" in paths
     assert "assets/portfolio/social-preview.png" in paths
+
+
+def test_readmes_lead_with_portfolio_evidence() -> None:
+    headings = {"README.md": "## Project status", "README_zh-TW.md": "## 專案進度"}
+    for filename, status_heading in headings.items():
+        text = (REPO_ROOT / filename).read_text(encoding="utf-8")
+        assert "![Vision XAI reliability evidence](assets/portfolio/hero.png)" in text
+        assert text.index("assets/portfolio/hero.png") < text.index(status_heading)
+        assert "github.com/kuotunyu/vision-xai-reliability-lab/actions/workflows/ci.yml" in text
+        assert "kuotunyu.github.io/vision-xai-reliability-lab/" in text
+
+
+def test_generated_result_tables_are_collapsible() -> None:
+    for filename in ("README.md", "README_zh-TW.md"):
+        text = (REPO_ROOT / filename).read_text(encoding="utf-8")
+        details_start = text.rfind("<details>", 0, text.index(RESULTS_BEGIN))
+        assert details_start >= 0
+        assert text.index(RESULTS_END) < text.index("</details>", details_start)
 
 
 def test_release_verifier_accepts_clean_candidate_repository(tmp_path: Path) -> None:
