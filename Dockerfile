@@ -31,8 +31,14 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 COPY configs/ configs/
 COPY app/ app/
+# The evidence workbench needs only committed, aggregate, weight-free artifacts.
+# Keep these COPY instructions explicit so raw results can never enter by accident.
+COPY results/derived/summary.json results/derived/summary.json
+COPY release/cuda-resume-canary.json release/cuda-resume-canary.json
+COPY assets/figures/ assets/figures/
 ENV PATH="/app/.venv/bin:$PATH" \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    GRADIO_ANALYTICS_ENABLED=False
 USER appuser
 EXPOSE 8000
 # The API answers /health as soon as it is up; models load lazily on demand.

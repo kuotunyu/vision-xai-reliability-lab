@@ -30,6 +30,13 @@ reviewing the final local commit.
    Pages model switch, and public JSON/document links in the GitHub UI.
 7. Pin the repository on the GitHub profile after those checks pass.
 
+The GitHub README, About description, Pages showcase, and Gradio workbench use
+Traditional Chinese (`zh-TW`) as the primary language while retaining English
+technical terms. Pages is a static results explorer; Gradio adds a separate
+local-model layer that remains unavailable until the owner supplies a compatible
+checkpoint. The CPU Docker image includes only the canonical aggregate summary,
+CUDA canary, and six aggregate figures—never the dataset, weights, or checkpoints.
+
 ## Release decision
 
 Only after the pushed commit passes CI should the owner decide whether to

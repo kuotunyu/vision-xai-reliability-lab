@@ -108,6 +108,19 @@ def test_build_showcase_exports_only_the_public_allowlist(tmp_path: Path) -> Non
     assert not any(name.endswith((".ckpt", ".npz", ".pt", ".pth")) for name in names)
 
 
+def test_docker_copies_only_safe_dashboard_evidence() -> None:
+    dockerfile = (REPO_ROOT / "Dockerfile").read_text(encoding="utf-8")
+    dockerignore = (REPO_ROOT / ".dockerignore").read_text(encoding="utf-8")
+
+    assert "COPY results/derived/summary.json results/derived/summary.json" in dockerfile
+    assert "COPY release/cuda-resume-canary.json release/cuda-resume-canary.json" in dockerfile
+    assert "COPY assets/figures/ assets/figures/" in dockerfile
+    assert "COPY data/" not in dockerfile
+    assert "COPY checkpoints/" not in dockerfile
+    assert "!results/derived/summary.json" in dockerignore
+    assert "!assets/figures/" in dockerignore
+
+
 def test_pages_workflow_builds_then_deploys_without_project_secrets() -> None:
     workflow_path = REPO_ROOT / ".github" / "workflows" / "pages.yml"
     workflow = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
