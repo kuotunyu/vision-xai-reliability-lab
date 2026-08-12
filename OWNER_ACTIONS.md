@@ -22,11 +22,9 @@ any other remote state.
    Then verify the README hero, local links, license, Pages model switch, and
    public JSON/document links in the GitHub UI.
 4. Keep the repository **About** panel in Traditional Chinese (`zh-TW`):
-   - Repository description: `以可靠性為核心的 XAI benchmark：比較 ConvNeXt 與 ViT 的
-     localization、faithfulness、sanity checks 與可重現 CUDA resume 證據。`
-   - Topics: `computer-vision`, `explainable-ai`, `trustworthy-ai`, `pytorch`,
-     `machine-learning`, `model-evaluation`, `reproducibility`, `fastapi`, and
-     `gradio`.
+   - Repository description: `以可靠性為核心的 XAI benchmark：比較 ConvNeXt-Tiny 與 ViT-B/16，檢驗 Localization、Faithfulness、Model Randomization 與可重現 CUDA resume 證據。`
+   - Topics: `computer-vision`, `explainable-ai`, `trustworthy-ai`,
+     `model-interpretability`, `model-evaluation`, `reproducibility`, and `pytorch`.
    - Website: `https://kuotunyu.github.io/vision-xai-reliability-lab/`.
 5. In **Settings → General → Social preview**, upload
    `assets/portfolio/social-preview.png` if the current preview is missing or
