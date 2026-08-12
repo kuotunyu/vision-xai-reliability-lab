@@ -39,12 +39,12 @@ def _hero_html() -> str:
     <header class="vx-hero">
       <div class="vx-hero-copy">
         <h1>證據工作台</h1>
-        <p>用 committed full-scale evidence 檢查 XAI，而不是只挑看起來合理的 heatmap。</p>
+        <p>用已提交的完整規模實驗證據檢查 XAI，而不是只挑看似合理的 heatmap。</p>
       </div>
-      <div class="vx-hero-meta" aria-label="Evidence scope">
-        <span>Full L4 results</span>
-        <span>500-sample attribution subset</span>
-        <span>Versioned artifacts</span>
+      <div class="vx-hero-meta" aria-label="證據範圍">
+        <span>L4 完整結果</span>
+        <span>固定 500 筆 attribution subset</span>
+        <span>版本化證據</span>
       </div>
     </header>
     """
@@ -55,18 +55,18 @@ def _findings_html(dashboard: EvidenceDashboard) -> str:
     <section class="vx-findings" aria-label="三個核心結論">
       <article>
         <strong>{dashboard.center_pointing:.3f}</strong>
-        <h2>Center prior 勝過 attribution method</h2>
+        <h2>Center prior 勝過實際 attribution</h2>
         <p>Pointing game 的最佳 baseline；這是 localization 證據，不是 causal faithfulness。</p>
       </article>
       <article>
         <strong>0.47–0.48</strong>
-        <h2>IG 未通過 sanity expectation</h2>
-        <p>Head randomization 後仍保留偏高的 absolute Spearman similarity，低才健康。</p>
+        <h2>IG 未通過 sanity check</h2>
+        <p>Model-randomization 後仍保留偏高的 absolute Spearman similarity；健康結果應該更低。</p>
       </article>
       <article>
         <strong>{_percent(dashboard.spurious_patch_energy_max, 2)}</strong>
-        <h2>Spurious-patch 是負結果</h2>
-        <p>Max mean patch energy 仍低；這不代表 vision model 普遍抵抗 spurious cue。</p>
+        <h2>Spurious-patch 實驗為負結果</h2>
+        <p>最大 mean patch energy 仍低；不能解讀為 vision model 普遍抵抗 spurious cue。</p>
       </article>
     </section>
     """
@@ -79,9 +79,9 @@ def model_evidence_outputs(
     model = dashboard.model(key)
     summary = f"""
     <section class="vx-model-summary" aria-live="polite">
-      <div><span>Model family</span><strong>{html.escape(model.label)}</strong></div>
-      <div><span>Validation accuracy</span><strong>{_percent(model.val_accuracy)}</strong></div>
-      <div><span>Validation macro-F1</span><strong>{_percent(model.val_macro_f1)}</strong></div>
+      <div><span>模型系列</span><strong>{html.escape(model.label)}</strong></div>
+      <div><span>驗證集 accuracy</span><strong>{_percent(model.val_accuracy)}</strong></div>
+      <div><span>驗證集 macro-F1</span><strong>{_percent(model.val_macro_f1)}</strong></div>
       <div>
         <span>最佳實際 attribution</span>
         <strong>{html.escape(model.best_method)} · {_percent(model.best_pointing)}</strong>
@@ -99,29 +99,29 @@ def model_evidence_outputs(
 
 def _canary_html(dashboard: EvidenceDashboard) -> str:
     exact_states = " · ".join(html.escape(name) for name in dashboard.canary_exact_states)
-    hash_status = "matched" if dashboard.canary_checkpoint_hash_equal else "different"
+    hash_status = "一致" if dashboard.canary_checkpoint_hash_equal else "不同"
     return f"""
     <section class="vx-canary">
       <div class="vx-canary-heading">
         <h2>CUDA resume canary</h2>
-        <span class="vx-status-pass">PASS · scoped</span>
+        <span class="vx-status-pass">PASS · scope 已界定</span>
       </div>
       <div class="vx-canary-grid">
-        <div><span>Hardware</span><strong>{html.escape(dashboard.canary_gpu)}</strong></div>
+        <div><span>硬體</span><strong>{html.escape(dashboard.canary_gpu)}</strong></div>
         <div>
-          <span>Software</span>
+          <span>軟體</span>
           <strong>PyTorch {html.escape(dashboard.canary_torch_version)}</strong>
         </div>
-        <div><span>Exact semantic state</span><strong>{exact_states}</strong></div>
+        <div><span>完全一致的 state</span><strong>{exact_states}</strong></div>
         <div><span>Scheduler</span><strong>{html.escape(dashboard.canary_scheduler_status)}</strong></div>
         <div>
-          <span>Whole-checkpoint SHA-256</span>
-          <strong>{hash_status} · diagnostic only</strong>
+          <span>完整 checkpoint SHA-256</span>
+          <strong>{hash_status} · 僅供 diagnostic</strong>
         </div>
       </div>
       <p>
-        這是 tiny synthetic、epoch-boundary resume mechanism 的證據；
-        不是 full L4 training resume 的證據。
+        這項證據使用 tiny synthetic data，在 epoch boundary 中斷後 resume；
+        不是完整 L4 training resume 的證據。
       </p>
     </section>
     """
@@ -152,7 +152,7 @@ def _readiness_html(available: list[InferenceModelName]) -> str:
     return f"""
     <section class="vx-readiness vx-readiness-ready">
       <h2>本機 inference 已就緒</h2>
-      <p>可用 model：{html.escape("、".join(labels))}。模型只在第一次操作時 lazy load。</p>
+      <p>可用模型：{html.escape("、".join(labels))}。模型只在第一次操作時 lazy load。</p>
     </section>
     """
 
@@ -195,7 +195,7 @@ def build_demo(cfg: AppConfig, *, evidence_root: Path | None = None) -> Any:
                         model_selector = gr.Radio(
                             choices=[("ConvNeXt-Tiny", "cnn"), ("ViT-B/16", "vit")],
                             value="cnn",
-                            label="Model family",
+                            label="模型系列",
                             elem_classes=["vx-model-toggle"],
                         )
                         initial = model_evidence_outputs(dashboard, "cnn")
@@ -203,19 +203,19 @@ def build_demo(cfg: AppConfig, *, evidence_root: Path | None = None) -> Any:
                         with gr.Row(elem_classes=["vx-figure-grid"], equal_height=False):
                             localization = gr.Image(
                                 value=initial[1],
-                                label="Localization · 不是 causal faithfulness",
+                                label="Localization（不是 causal faithfulness）",
                                 interactive=False,
                                 buttons=[],
                             )
                             faithfulness = gr.Image(
                                 value=initial[2],
-                                label="Faithfulness · deletion / insertion",
+                                label="Faithfulness（deletion / insertion）",
                                 interactive=False,
                                 buttons=[],
                             )
                             spurious = gr.Image(
                                 value=initial[3],
-                                label="Spurious patch · negative result",
+                                label="Spurious patch（負結果）",
                                 interactive=False,
                                 buttons=[],
                             )
@@ -231,10 +231,9 @@ def build_demo(cfg: AppConfig, *, evidence_root: Path | None = None) -> Any:
                         )
                     gr.HTML(_canary_html(dashboard))
                     gr.HTML(
-                        f'<p class="vx-scope-note">所有 attribution-derived metrics 使用固定 '
-                        f"<strong>{dashboard.attribution_samples}-sample attribution "
-                        "subset</strong>，"
-                        "不是完整 test split。localization 不是 causal faithfulness。</p>"
+                        f'<p class="vx-scope-note">所有 attribution metrics 使用固定 '
+                        f"<strong>{dashboard.attribution_samples} 筆 attribution subset</strong>，"
+                        "不是完整 test split；localization 不是 causal faithfulness。</p>"
                     )
 
             with gr.Tab("本機模型"):
@@ -262,14 +261,14 @@ def build_demo(cfg: AppConfig, *, evidence_root: Path | None = None) -> Any:
                                     for key in available
                                 ],
                                 value=initial_model,
-                                label="Model family",
+                                label="模型系列",
                             )
                             method_dropdown = gr.Dropdown(
                                 choices=[
                                     (METHOD_LABELS[method], method) for method in initial_methods
                                 ],
                                 value=initial_methods[0],
-                                label="Attribution method",
+                                label="Attribution 方法",
                             )
                             explain_button = gr.Button(
                                 "產生本機 attribution",
@@ -278,12 +277,12 @@ def build_demo(cfg: AppConfig, *, evidence_root: Path | None = None) -> Any:
                             )
                         with gr.Column(scale=2, min_width=360):
                             live_heatmap = gr.Image(
-                                label="Attribution · visualization-normalized",
+                                label="Attribution（已正規化顯示）",
                                 interactive=False,
                             )
                             live_info = gr.HTML(
                                 '<p class="vx-live-placeholder">結果會顯示 prediction、'
-                                "probability、method metadata 與限制。</p>"
+                                "probability、方法 metadata 與限制。</p>"
                             )
 
                     def update_methods(model: str) -> Any:

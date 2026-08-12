@@ -12,30 +12,48 @@ colors:
   failure-coral: "#ff785f"
   verified-lime: "#a7e33f"
   focus-amber: "#f7c95c"
+  metadata-panel: "#081a24"
+  warning-divider: "#6c413b"
+  code-ivory: "#d9e8ee"
+  figure-muted: "#4c6470"
+  figure-copy: "#405964"
+  hover-shadow: "#0006"
 typography:
   display:
     fontFamily: "Noto Sans TC, Microsoft JhengHei, PingFang TC, sans-serif"
-    fontSize: "clamp(2.7rem, 6vw, 6rem)"
+    fontSize: "clamp(2.4rem, 5vw, 4rem)"
     fontWeight: 800
-    lineHeight: 0.98
-    letterSpacing: "-0.035em"
+    lineHeight: 1.04
+    letterSpacing: "-0.025em"
   body:
     fontFamily: "Noto Sans TC, Microsoft JhengHei, PingFang TC, sans-serif"
-    fontSize: "17px"
+    fontSize: "clamp(1rem, 1.3vw, 1.0625rem)"
     fontWeight: 400
-    lineHeight: 1.6
+    lineHeight: 1.55
     letterSpacing: "normal"
   data-label:
     fontFamily: "Cascadia Code, Consolas, monospace"
-    fontSize: "0.78rem"
+    fontSize: "0.875rem"
     fontWeight: 650
     lineHeight: 1.35
     letterSpacing: "0.025em"
 rounded:
   control: "10px"
   compact-panel: "12px"
+  dense-panel: "14px"
   evidence-panel: "16px"
   hero-panel: "18px"
+  status-pill: "999px"
+typeScale:
+  micro: "0.7rem"
+  compact: "0.82rem"
+  meta: "0.875rem"
+  code: "0.94rem"
+  body: "1rem"
+  body-large: "1.05–1.2rem"
+  title: "1.125–1.7rem"
+  headline: "1.9–2.8rem"
+  display: "2.35–4.2rem"
 spacing:
   xs: "8px"
   sm: "12px"
@@ -46,19 +64,19 @@ components:
     backgroundColor: "{colors.measured-cyan}"
     textColor: "{colors.canvas-ink}"
     rounded: "{rounded.control}"
-    padding: "12px 20px"
-    height: "50px"
+    padding: "10px 16px"
+    height: "48px"
   evidence-chip:
     backgroundColor: "{colors.canvas-ink}"
     textColor: "{colors.measured-cyan}"
     typography: "{typography.data-label}"
     rounded: "999px"
-    padding: "7px 11px"
+    padding: "6px 10px"
   evidence-panel:
     backgroundColor: "{colors.evidence-panel}"
     textColor: "{colors.evidence-ivory}"
     rounded: "{rounded.evidence-panel}"
-    padding: "20px"
+    padding: "16px"
 ---
 
 # Design System: Vision XAI Reliability Lab
@@ -80,7 +98,7 @@ evidence-first reading order.
 
 - Dark navy work surface with warm off-white text.
 - Cyan for measured evidence, coral for failed expectations, and lime for verified states.
-- Large Traditional Chinese headings and compact monospace data labels.
+- Restrained Traditional Chinese headings and readable monospace data labels.
 - Dense, responsive grids with explicit claim boundaries.
 
 ## Colors
@@ -126,11 +144,11 @@ is restricted to data, run metadata, version identifiers, and machine-readable r
 
 ### Hierarchy
 
-- **Display** (800, fluid 2.7–6rem, 0.98): product title and major showcase statements.
-- **Headline** (800, fluid 2.5–4.6rem, 0.98): section conclusions.
-- **Title** (700–800, 1.16–1.45rem, 1.35): claim and component headings.
-- **Body** (400, 17px, 1.6): explanations, limitations, and recovery instructions; keep prose near 68ch.
-- **Label** (650, 0.78rem, 0.025em): measured values and technical metadata only.
+- **Display** (800, fluid 2.4–4rem, 1.04): product title and major showcase statements.
+- **Headline** (800, fluid 1.9–2.8rem, 1.04): section conclusions.
+- **Title** (700–800, 1.125–1.3rem, 1.35–1.4): claim and component headings.
+- **Body** (400, 16–17px, 1.55): explanations, limitations, and recovery instructions; keep prose near 68ch.
+- **Label** (650, 0.875rem, 0.025em): measurements and technical metadata only.
 
 ### Named Rules
 
@@ -139,14 +157,14 @@ terms in English inside natural Traditional Chinese sentences.
 
 ## Layout
 
-Gradio content uses a wide 1480px ceiling with 24px page gutters and compact 12–24px internal
+Gradio content uses a wide 1480px ceiling with 18px page gutters and compact 10–18px internal
 rhythm. Its first viewport flows from identity and scope to two tabs and a continuous three-part
 finding band. The static showcase uses a narrower 72rem editorial measure and more separation
-between narrative sections.
+between narrative sections, capped at 56px rather than viewport-filling whitespace.
 
 At 1080px, five-column evidence strips become two columns and figures wrap. At 760px, all core
-evidence becomes a single column, gutters tighten to 12px, and the reading order remains
-unchanged. Horizontal scrolling is not part of the system.
+evidence becomes a single column, gutters tighten to 10px, scope metadata compacts into two
+rows, and the reading order remains unchanged. Horizontal scrolling is not part of the system.
 
 ## Elevation & Depth
 
@@ -168,7 +186,7 @@ All structural borders are one pixel; semantic emphasis may use a bottom edge on
 
 ### Buttons
 
-- **Shape:** compact rounded control (10px) with a minimum 50px touch height.
+- **Shape:** compact rounded control (10px) with a minimum 48px touch height.
 - **Primary:** measured cyan on canvas ink with assertive 800-weight text.
 - **Hover / Focus:** lighter cyan on hover; a three-pixel focus-amber outline with offset on keyboard focus.
 - **Secondary:** transparent or panel-toned with a measured-cyan border.
@@ -184,7 +202,7 @@ All structural borders are one pixel; semantic emphasis may use a bottom edge on
 - **Background:** evidence panel, with evidence panel strong for metric cells.
 - **Shadow Strategy:** flat at rest.
 - **Border:** one-pixel divider steel.
-- **Internal Padding:** 20–24px for panels; 16px for dense metric cells.
+- **Internal Padding:** 16–18px for panels; 13–16px for dense metric cells.
 
 ### Inputs / Fields
 

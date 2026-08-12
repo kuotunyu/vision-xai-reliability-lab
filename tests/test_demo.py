@@ -35,8 +35,34 @@ def test_demo_has_exactly_two_zh_tw_tabs(
     assert labels == ["實驗證據", "本機模型"]
     text = json.dumps(config, ensure_ascii=False)
     assert "Precomputed explorer" not in text
-    assert "500-sample attribution subset" in text
+    assert "固定 500 筆 attribution subset" in text
     assert "localization 不是 causal faithfulness" in text
+
+
+def test_demo_uses_zh_tw_for_interface_scaffolding(
+    config_factory: ConfigFactory,
+    synthetic_data_dir: Path,
+) -> None:
+    cfg = config_factory(synthetic_data_dir)
+
+    text = _config_text(build_demo(cfg, evidence_root=REPO_ROOT))
+
+    assert "用已提交的完整規模實驗證據檢查 XAI" in text
+    assert "L4 完整結果" in text
+    assert "版本化證據" in text
+    assert "模型系列" in text
+    assert "驗證集 accuracy" in text
+    assert "Center prior 勝過實際 attribution" in text
+    assert "IG 未通過 sanity check" in text
+    assert "Spurious-patch 實驗為負結果" in text
+    assert "硬體" in text
+    assert "完整 checkpoint SHA-256" in text
+    assert "Full L4 results" not in text
+    assert "Versioned artifacts" not in text
+    assert "Model family" not in text
+    assert "Validation accuracy" not in text
+    assert "Hardware" not in text
+    assert "Software" not in text
 
 
 def test_model_evidence_outputs_switch_models() -> None:

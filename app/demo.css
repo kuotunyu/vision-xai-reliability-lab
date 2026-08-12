@@ -9,6 +9,10 @@
   --vx-coral: #ff785f;
   --vx-lime: #a7e33f;
   --vx-focus: #f7c95c;
+  --vx-type-display: clamp(2.4rem, 4vw, 3.4rem);
+  --vx-type-metric: clamp(2rem, 3.4vw, 3rem);
+  --vx-type-body: 1rem;
+  --vx-type-meta: 0.875rem;
 }
 
 html,
@@ -23,63 +27,77 @@ body {
   background: var(--vx-bg) !important;
   color: var(--vx-text) !important;
   font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif !important;
-  font-size: 17px !important;
+  font-size: 16px !important;
 }
 
 .vx-shell > .main,
 .vx-shell .contain {
   max-width: 1480px !important;
   margin: 0 auto !important;
-  padding: 20px 24px 36px !important;
+  padding: 14px 18px 24px !important;
 }
 
 .vx-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.8fr);
-  gap: 28px;
+  grid-template-columns: minmax(0, 1.35fr) minmax(330px, 0.95fr);
+  gap: 18px;
   align-items: end;
   max-width: 1480px;
-  margin: 0 auto 14px;
-  padding: 26px 28px;
+  margin: 0 auto 10px;
+  padding: 20px 22px;
   border: 1px solid var(--vx-line);
   border-radius: 18px;
   background: var(--vx-panel);
 }
 
 .vx-hero h1 {
-  margin: 0 0 10px;
+  margin: 0 0 6px;
   color: var(--vx-text);
   font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif;
-  font-size: clamp(2.7rem, 6vw, 5.4rem);
+  font-size: var(--vx-type-display);
   font-weight: 700;
-  line-height: 0.98;
-  letter-spacing: -0.035em;
+  line-height: 1.04;
+  letter-spacing: -0.025em;
 }
 
 .vx-hero p {
   max-width: 68ch;
   margin: 0;
   color: var(--vx-muted);
-  font-size: clamp(1.05rem, 2vw, 1.35rem);
-  line-height: 1.6;
+  font-size: clamp(1rem, 1.3vw, 1.125rem);
+  line-height: 1.5;
 }
 
 .vx-hero-meta {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 8px;
+  align-items: center;
+  row-gap: 4px;
 }
 
-.vx-hero-meta span,
+.vx-hero-meta span {
+  color: var(--vx-cyan);
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: var(--vx-type-meta);
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.vx-hero-meta span:not(:last-child)::after {
+  content: "·";
+  margin: 0 0.55rem;
+  color: var(--vx-line);
+}
+
 .vx-status-pass {
   border: 1px solid var(--vx-line);
   border-radius: 999px;
-  padding: 7px 11px;
+  padding: 6px 10px;
   color: var(--vx-cyan);
   background: #081a24;
   font-family: "Cascadia Code", Consolas, monospace;
-  font-size: 0.78rem;
+  font-size: var(--vx-type-meta);
   font-weight: 650;
 }
 
@@ -94,8 +112,8 @@ body {
 }
 
 .vx-tabs button[role="tab"] {
-  min-height: 52px;
-  padding: 12px 20px !important;
+  min-height: 48px;
+  padding: 10px 16px !important;
   border-radius: 10px 10px 0 0 !important;
   color: var(--vx-muted) !important;
   font-size: 1.05rem !important;
@@ -113,15 +131,15 @@ body {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0;
   overflow: hidden;
-  margin: 12px 0;
+  margin: 10px 0;
   border: 1px solid var(--vx-line);
   border-radius: 16px;
   background: var(--vx-panel);
 }
 
 .vx-findings article {
-  min-height: 210px;
-  padding: 22px;
+  min-height: 170px;
+  padding: 18px;
   border-right: 1px solid var(--vx-line);
 }
 
@@ -139,12 +157,12 @@ body {
 
 .vx-findings strong {
   display: block;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   color: var(--vx-cyan);
   font-family: "Cascadia Code", Consolas, monospace;
-  font-size: clamp(2.2rem, 5vw, 4.4rem);
-  line-height: 0.95;
-  letter-spacing: -0.035em;
+  font-size: var(--vx-type-metric);
+  line-height: 1;
+  letter-spacing: -0.025em;
 }
 
 .vx-findings h2,
@@ -153,8 +171,8 @@ body {
 .vx-evidence-error h2 {
   margin: 0 0 8px;
   color: var(--vx-text);
-  font-size: 1.16rem;
-  line-height: 1.35;
+  font-size: 1.125rem;
+  line-height: 1.4;
 }
 
 .vx-findings p,
@@ -165,18 +183,18 @@ body {
 .vx-live-placeholder {
   margin: 0;
   color: var(--vx-muted);
-  font-size: 0.98rem;
-  line-height: 1.65;
+  font-size: var(--vx-type-body);
+  line-height: 1.55;
 }
 
 .vx-evidence-panel,
 .vx-canary,
 .vx-readiness,
 .vx-evidence-error {
-  margin: 12px 0 !important;
-  padding: 20px !important;
+  margin: 10px 0 !important;
+  padding: 16px !important;
   border: 1px solid var(--vx-line) !important;
-  border-radius: 16px !important;
+  border-radius: 14px !important;
   background: var(--vx-panel) !important;
   box-shadow: none !important;
 }
@@ -195,7 +213,7 @@ body {
 }
 
 .vx-model-toggle {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   border: 1px solid var(--vx-line) !important;
   background: #081a24 !important;
 }
@@ -228,18 +246,18 @@ body {
 
 .vx-model-summary div {
   display: flex;
-  min-height: 96px;
+  min-height: 78px;
   flex-direction: column;
   justify-content: space-between;
-  gap: 10px;
-  padding: 16px;
+  gap: 8px;
+  padding: 13px;
   background: var(--vx-panel-strong);
 }
 
 .vx-model-summary span,
 .vx-canary-grid span {
   color: var(--vx-muted);
-  font-size: 0.78rem;
+  font-size: var(--vx-type-meta);
   font-weight: 650;
   letter-spacing: 0.025em;
 }
@@ -247,14 +265,14 @@ body {
 .vx-model-summary strong,
 .vx-canary-grid strong {
   color: var(--vx-text);
-  font-size: 1.05rem;
+  font-size: 1rem;
   line-height: 1.35;
 }
 
 .vx-figure-grid {
   align-items: start !important;
   gap: 10px !important;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
 .vx-figure-grid > div {
@@ -270,15 +288,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 14px;
+  gap: 12px;
+  margin-bottom: 10px;
 }
 
 .vx-canary-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 18px;
-  margin-bottom: 14px;
+  gap: 12px;
+  margin-bottom: 10px;
 }
 
 .vx-canary-grid div {
@@ -292,8 +310,8 @@ body {
 }
 
 .vx-scope-note {
-  margin: 14px 2px 0 !important;
-  padding: 12px 14px;
+  margin: 10px 2px 0 !important;
+  padding: 10px 12px;
   border-radius: 12px;
   background: #081a24;
 }
@@ -316,8 +334,8 @@ body {
 }
 
 .vx-local-grid {
-  gap: 14px !important;
-  margin-top: 12px;
+  gap: 12px !important;
+  margin-top: 10px;
 }
 
 .vx-action {
@@ -352,7 +370,7 @@ body {
   background: #061019;
   color: #d9e8ee;
   font-family: "Cascadia Code", Consolas, monospace;
-  font-size: 0.88rem;
+  font-size: 0.94rem;
   line-height: 1.55;
 }
 
@@ -386,21 +404,41 @@ body {
 @media (max-width: 760px) {
   .vx-shell > .main,
   .vx-shell .contain {
-    padding: 10px 12px 24px !important;
+    padding: 8px 10px 18px !important;
   }
 
   .vx-hero {
     grid-template-columns: 1fr;
-    gap: 18px;
-    padding: 22px 18px;
+    gap: 10px;
+    padding: 16px;
   }
 
   .vx-hero h1 {
-    font-size: clamp(2.4rem, 12vw, 3.3rem);
+    font-size: 2.35rem;
   }
 
   .vx-hero-meta {
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    justify-content: stretch;
+    column-gap: 10px;
+    row-gap: 2px;
+    padding-top: 10px;
+    border-top: 1px solid var(--vx-line);
+  }
+
+  .vx-hero-meta span:nth-child(2) {
+    grid-column: 1 / -1;
+  }
+
+  .vx-hero-meta span:nth-child(3) {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+  }
+
+  .vx-hero-meta span:not(:last-child)::after {
+    display: none;
   }
 
   .vx-findings,
@@ -411,6 +449,7 @@ body {
 
   .vx-findings article {
     min-height: 0;
+    padding: 16px;
     border-right: 0;
     border-bottom: 1px solid var(--vx-line);
   }

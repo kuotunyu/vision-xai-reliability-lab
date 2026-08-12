@@ -90,9 +90,29 @@ def test_showcase_source_has_accessible_evidence_structure() -> None:
     assert all(image.get("alt") for image in parser.images)
     assert parser.local_resources == ["styles.css", "app.js"]
     assert "不是 live inference demo" in html
-    assert "固定 500-sample attribution subset" in html
+    assert "固定 500 筆 attribution subset" in html
     assert "localization 不是 causal faithfulness" in html
     assert 'data-metric="spurious-patch-energy"' in html
+
+
+def test_showcase_uses_zh_tw_for_interface_scaffolding() -> None:
+    html = (REPO_ROOT / "showcase" / "index.html").read_text(encoding="utf-8")
+
+    assert "完整規模 / 2026.07.25" in html
+    assert "<dt>訓練</dt>" in html
+    assert "<dt>信賴區間</dt>" in html
+    assert "Localization 盲點" in html
+    assert "Sanity check 未通過" in html
+    assert "已提交的完整規模彙總" in html
+    assert "公開證據邊界" in html
+    assert "證據先於美感" in html
+    assert "開啟正式結果 JSON" in html
+    assert "Localization trap" not in html
+    assert "Sanity failure" not in html
+    assert "Negative result" not in html
+    assert "Committed full-scale aggregates" not in html
+    assert "Public evidence boundary" not in html
+    assert "開啟 CANONICAL JSON" not in html
 
 
 def test_showcase_avoids_decorative_scaffolding_and_system_display_type() -> None:
