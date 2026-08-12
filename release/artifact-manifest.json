@@ -85,6 +85,20 @@
       "hash_mode": "text-lf",
       "bytes": 2878,
       "sha256": "cf71bfab7066e205b12e6e658be0fe3ee1904c85007af2aee636ace9342041d3"
+    },
+    {
+      "path": "assets/portfolio/hero.png",
+      "role": "portfolio visualization derived from full aggregate",
+      "hash_mode": "binary",
+      "bytes": 76746,
+      "sha256": "5208d1828393f14c34a1c658f8d8083a36fcefd2b2f24bdd7dd20a1f90f34bd1"
+    },
+    {
+      "path": "assets/portfolio/social-preview.png",
+      "role": "portfolio visualization derived from full aggregate",
+      "hash_mode": "binary",
+      "bytes": 48106,
+      "sha256": "c4832eba2b6d97e6ef0fb8c4b3d9fc24db2f3d3d85d68826f6f21ebcaab8865b"
     }
   ]
 }

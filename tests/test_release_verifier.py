@@ -82,6 +82,16 @@ def test_release_verifier_accepts_committed_evidence() -> None:
     assert "CUDA resume canary evidence" in result.stdout
 
 
+def test_release_manifest_covers_portfolio_visuals() -> None:
+    manifest = json.loads(
+        (REPO_ROOT / "release" / "artifact-manifest.json").read_text(encoding="utf-8")
+    )
+    paths = {entry["path"] for entry in manifest["artifacts"]}
+
+    assert "assets/portfolio/hero.png" in paths
+    assert "assets/portfolio/social-preview.png" in paths
+
+
 def test_release_verifier_accepts_clean_candidate_repository(tmp_path: Path) -> None:
     root = _copy_evidence(tmp_path)
     _initialize_candidate_git(root)
