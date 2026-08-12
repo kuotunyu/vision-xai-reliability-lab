@@ -99,7 +99,7 @@ def test_release_manifest_covers_portfolio_visuals() -> None:
 
 
 def test_readmes_lead_with_portfolio_evidence() -> None:
-    headings = {"README.md": "## 專案進度", "README_en.md": "## Project status"}
+    headings = {"README.md": "## Release 狀態", "README_en.md": "## Release status"}
     for filename, status_heading in headings.items():
         text = (REPO_ROOT / filename).read_text(encoding="utf-8")
         assert "![Vision XAI reliability evidence](assets/portfolio/hero.png)" in text
@@ -110,8 +110,30 @@ def test_readmes_lead_with_portfolio_evidence() -> None:
 
     primary = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
     english = (REPO_ROOT / "README_en.md").read_text(encoding="utf-8")
-    assert "[English version](README_en.md)" in primary
+    assert "[English](README_en.md)" in primary
     assert "[正體中文](README.md)" in english
+
+
+def test_readmes_use_the_evidence_first_information_architecture() -> None:
+    primary = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    secondary = (REPO_ROOT / "README_en.md").read_text(encoding="utf-8")
+
+    assert primary.startswith("# Vision XAI Reliability Lab\n")
+    assert "[成果展示]" in primary
+    assert "[快速開始](#快速開始)" in primary
+    assert "[實驗證據](ARTIFACTS.md)" in primary
+    assert "[Model Card](MODEL_CARD.md)" in primary
+    assert "[English](README_en.md)" in primary
+    assert "## Release 狀態" in primary
+    assert "## 專案進度" not in primary
+
+    assert "[正體中文](README.md)" in secondary
+    assert "## Release status" in secondary
+    assert "## Project status" not in secondary
+
+    for text in (primary, secondary):
+        assert "FastAPI-0.110" not in text
+        assert text.count("```mermaid") == 1
 
 
 def test_owner_actions_capture_github_portfolio_handoff() -> None:

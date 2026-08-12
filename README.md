@@ -1,123 +1,56 @@
-# vision-xai-reliability-lab
+# Vision XAI Reliability Lab
 
 [![CI](https://github.com/kuotunyu/vision-xai-reliability-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/kuotunyu/vision-xai-reliability-lab/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?logo=pytorch&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688?logo=fastapi&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2EA44F.svg)](LICENSE)
 
-本專案實作一套以可靠性為優先的視覺可解釋性基準測試 (Vision XAI Reliability Benchmark)：針對 ConvNeXt-Tiny 與 ViT-B/16 雙架構，實測驗證「視覺上看似合理」的歸因熱力圖 (Attribution Heatmaps) 為什麼仍可能在因果推論上失效。基準分開量測定位能力 (Localization)、因果忠實度 (Causal Faithfulness)、模型隨機化健全性 (Model Randomization Sanity)、翻轉穩定性 (Flip Stability) 與偽特徵干擾 (Spurious Cue)。
+這是一套以可靠性為核心的 Vision XAI benchmark，針對 ConvNeXt-Tiny 與 ViT-B/16，分開檢驗 Heatmap 的 Localization、Faithfulness、Model Randomization、Flip Consistency 與 Spurious Patch 行為。
 
-[English version](README_en.md) · [→ 互動成果導覽](https://kuotunyu.github.io/vision-xai-reliability-lab/) · [→ 快速重現](#快速開始) · [→ 證據審核 (ARTIFACTS.md)](ARTIFACTS.md) · [→ Model Card](MODEL_CARD.md)
+重點不在產生更漂亮的 Heatmap，而在回答：它是否真的依賴模型學到的證據，以及結論能否被重算、稽核與反駁。
+
+[成果展示](https://kuotunyu.github.io/vision-xai-reliability-lab/) · [快速開始](#快速開始) · [實驗證據](ARTIFACTS.md) · [Model Card](MODEL_CARD.md) · [English](README_en.md)
 
 ![Vision XAI reliability evidence](assets/portfolio/hero.png)
 
-> **熱力圖不是因果推理的證據。** 本專案不只展示解釋視覺化，而是以嚴謹的統計指標量測解釋在何處成立、在何處失效，並透過不可變 Hash 簽章保護評測證據不被 Smoke 測試或 CI 流程改寫。
+> **Heatmap 不是因果推理的證據。** 本專案以統計指標檢驗解釋在哪裡成立、在哪裡失效，並以 SHA-256 manifest 防止 smoke test 或 CI 改寫正式結果。
 
-不含 weights 的[靜態結果展示原始檔](showcase/)會把這些 committed aggregates 整理成作品集導覽；它不載入模型、資料集、後端服務、analytics 或外部 JavaScript。
-
----
-
-## 核心發現與方法學翻轉
-
-1. **Center Prior 偏差暴露**：
-   固定 Center Prior 在兩種模型的 Pointing Game 都達到 **0.922**，超越所有實際 Attribution 方法。這揭示出資料集的構圖中心偏差 (Dataset Composition Bias)，證明單純 Localization 只是幾何重疊，不等於 Causal Faithfulness。
-2. **Integrated Gradients 健全性檢驗未通過 (Model-Randomization Sanity)**：
-   在 Head Randomization 後，Integrated Gradients 仍保留約 0.47–0.48 的絕對 Spearman 相似度，顯著高於其他方法（健全之歸因應對權重隨機化敏感）。
-3. **Spurious-patch 捷徑特徵負結果**：
-   在 Frozen-backbone、Head-only 訓練設定下，模型並未依賴注入之角隅 Shortcut Patch；此負結果誠實記錄，不應過度解讀為 Vision Model 天生免疫 Spurious Cue。
-
-這些數字來自真實的 full-scale L4 run：四個 classifier heads 以完整資料集訓練。Attribution-derived metrics 使用 test split 中固定的 500 samples，不是完整 test split。不可變的 aggregate 與來源紀錄見 [ARTIFACTS.md](ARTIFACTS.md)。
+不含 weights 的[靜態展示原始檔](showcase/)只讀取已提交的 aggregate artifacts；不載入模型、dataset、後端服務、analytics 或外部 JavaScript。
 
 ---
 
-## 系統架構與 Pipeline
+## 三項核心發現
 
-### 1. 多維度 XAI 可靠性評測架構
+1. **Center Prior 在 Pointing Game 勝出。** 固定 Center Prior 在兩種模型都達到 **0.922**，高於所有受測 Attribution 方法。這反映 dataset 的中心構圖偏差；Localization 只代表幾何重疊，不等於 causal Faithfulness。
+2. **Integrated Gradients 未通過 Model Randomization。** Head Randomization 後仍保留約 **0.47–0.48** 的絕對 Spearman 相似度，顯著高於其他受測方法。
+3. **Spurious Patch 是負結果。** 在 frozen-backbone、head-only 設定下，模型沒有學到預期的 corner-patch shortcut；這不代表 vision model 普遍能抵抗 spurious cue。
 
-```mermaid
-%%{init: {'themeVariables': {'fontSize': '18px'}}}%%
-flowchart TD
-    subgraph DataStage ["階段一：決定性資料工程與干預 (Data Engineering & Intervention)"]
-        direction LR
-        Raw[("Oxford-IIIT Pet 原生資料集<br/>(37 類貓狗分割影像)")] --> Trimap["Trimap 邊界語義驗證<br/>(前景 Pet / 背景 / 邊界)"] --> Patch[("角隅偽特徵注入<br/>(Correlated Spurious Patch)")] --> Manifest[("決定性 Manifest<br/>(SHA-256 Dataset Fingerprint)")]
-    end
+以上數字來自真實的 full-scale L4 run：四個 classifier heads 使用完整 training split。Attribution metrics 使用 test split 中固定的 500 samples，**不是完整 test split**。Aggregate、provenance 與限制見 [ARTIFACTS.md](ARTIFACTS.md) 與 [FAILURES.md](FAILURES.md)。
 
-    subgraph TrainStage ["階段二：模型訓練與歸因計算 (Training & Attribution)"]
-        direction LR
-        Manifest --> Models["雙架構分類模型<br/>(ConvNeXt-Tiny vs ViT-B/16)"] --> Train["Head-only 訓練與 Checkpoint<br/>(CUDA AMP 混合精度)"] --> XAI["四大多元歸因方法<br/>(Grad-CAM · IG · Occlusion · Baselines)"]
-    end
+---
 
-    subgraph EvalStage ["階段三：五大可靠性維度評估 (Five Reliability Dimensions)"]
-        direction LR
-        XAI --> D1["1. 定位能力 (Localization)<br/>(Pointing Game · Energy)"] & D2["2. 因果忠實度 (Faithfulness)<br/>(Deletion / Insertion AUC)"] & D3["3. 健全性隨機化 (Sanity)<br/>(Model Randomization Test)"]
-        D1 & D2 & D3 --> Summary[("不可變聚合報告<br/>(results/derived/summary.json)")]
-    end
-
-    DataStage --> TrainStage --> EvalStage
-
-    classDef srcStyle fill:#e7f5ff,stroke:#1971c2,stroke-width:2px,color:#212529
-    classDef procStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#212529
-    classDef evalStyle fill:#e6fcf5,stroke:#0ca678,stroke-width:2px,color:#212529
-
-    class Raw,Patch,Manifest,Summary srcStyle
-    class Trimap,Models,Train,XAI,D1,D2,D3 procStyle
-
-    style DataStage fill:#f8f9fa,stroke:#1971c2,stroke-width:2px,color:#1971c2,stroke-dasharray: 4 4
-    style TrainStage fill:#faf5ff,stroke:#7b1fa2,stroke-width:2px,color:#7b1fa2,stroke-dasharray: 4 4
-    style EvalStage fill:#f4fbf7,stroke:#0ca678,stroke-width:2px,color:#0ca678,stroke-dasharray: 4 4
-```
-
-### 2. 服務架構與成果展示
+## 證據流程與本機模型
 
 ```mermaid
-%%{init: {'themeVariables': {'fontSize': '18px'}}}%%
-flowchart TD
-    subgraph CoreStage ["階段一：核心評測產物 (Core Artifacts)"]
-        direction LR
-        SumJSON[("不可變評測數據<br/>(summary.json & figures)")] --> Showcase["靜態成果展示頁<br/>(GitHub Pages 零後端展示)"]
-    end
-
-    subgraph ServStage ["階段二：本機推論與互動介面 (Serving & UI)"]
-        direction LR
-        CKPT[("微調權重檔<br/>(Checkpoints)")] --> API["FastAPI 後端服務<br/>(Weights 延遲載入)"] --> WebUI(["Gradio 互動式介面<br/>(視覺化 Heatmap 比對)"])
-    end
-
-    subgraph GateStage ["階段三：發布與審計驗證 (Release Verification)"]
-        direction LR
-        SumJSON & CKPT --> Gate{"Verify Release 門禁<br/>(SHA-256 雜湊 · 數據同步)"} --> Public(["可公開發布版本<br/>(Clean Publication)"])
-    end
-
-    CoreStage --> ServStage --> GateStage
-
-    classDef srcStyle fill:#e7f5ff,stroke:#1971c2,stroke-width:2px,color:#212529
-    classDef procStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#212529
-    classDef condStyle fill:#fff9db,stroke:#f59f00,stroke-width:2px,color:#212529
-    classDef safeStyle fill:#e6fcf5,stroke:#0ca678,stroke-width:2px,color:#212529
-
-    class SumJSON,CKPT srcStyle
-    class Showcase,API,WebUI procStyle
-    class Gate condStyle
-    class Public safeStyle
-
-    style CoreStage fill:#f8f9fa,stroke:#1971c2,stroke-width:2px,color:#1971c2,stroke-dasharray: 4 4
-    style ServStage fill:#faf5ff,stroke:#7b1fa2,stroke-width:2px,color:#7b1fa2,stroke-dasharray: 4 4
-    style GateStage fill:#f4fbf7,stroke:#0ca678,stroke-width:2px,color:#0ca678,stroke-dasharray: 4 4
+flowchart LR
+    Data["Oxford-IIIT Pet<br/>deterministic manifest"] --> Train["ConvNeXt-Tiny · ViT-B/16<br/>head-only training"]
+    Train --> Attr["Grad-CAM · Integrated Gradients<br/>Occlusion · baselines"]
+    Attr --> Eval["Localization · Faithfulness<br/>Randomization · Flip · Spurious Patch"]
+    Eval --> Evidence["Aggregate evidence<br/>95% bootstrap CI · SHA-256"]
+    Evidence --> Showcase["GitHub Pages<br/>weight-free showcase"]
+    Train -. user-supplied checkpoints .-> Local["FastAPI + Gradio<br/>local model workspace"]
+    Evidence --> Gate{"Release verifier"}
+    Local --> Gate
 ```
 
 ---
 
-## 專案進度
+## Release 狀態
 
-| 階段 (Phase) | 實作範圍與交付項目 | 執行環境 | 交付狀態 |
-|---|---|---|---|
-| Stage 0 | 專案打包、Lint / Type / Test 門禁、Docker CPU 路徑、CI 流水線 | 本機 CPU | 已完成 |
-| Stage 1 | 決定性資料管線、JSONL Manifest、Fingerprint、Mask 與斷點續跑 | 本機 CPU | 已完成 |
-| Stage 2 | Head-only 微調訓練、CUDA AMP 混合精度、Checkpoint 與 `--resume` 續跑 | Google Colab L4 | 已完成 |
-| Stage 3 | Grad-CAM、Integrated Gradients、Occlusion 與三組 Baseline 實作 | 本機 / GPU | 已完成 |
-| Stage 4 | Localization、Faithfulness、Sanity、Stability、Spurious-cue 五維評估 | Google Colab L4 | 已完成 |
-| Stage 5 | 自動化報告產生系統與不可變公開聚合數據 (Artifact Manifest) | 本機 CPU | 已完成 |
-| Stage 6 | FastAPI 後端 ＋ Gradio 互動介面（支援權重延遲載入） | 本機 CPU / Web | 已完成 |
+- **Full-scale evidence：已驗證。** 四個 classifier heads 在完整 training split 上以 NVIDIA L4 執行；正式 aggregates 受 SHA-256 manifest 保護。
+- **CUDA resume canary：PASS。** RTX 4090 上的 tiny synthetic canary 比對 uninterrupted 與 epoch-boundary resume；final head、optimizer、GradScaler 與 stable metrics 完全一致。它不是 full training 證據，且訓練 loop 沒有 scheduler。
+- **Release gates：已納入。** Ruff、strict mypy、CPU tests、package、showcase allowlist 與 release verifier 都不依賴 GPU、dataset、weights 或 secrets。
+- **公開邊界：明確。** Repository 與 GitHub Pages 只含 source、aggregates、figures 與文件；dataset、weights、checkpoints 與 runtime outputs 均排除。本機 Gradio 需由使用者另行提供 checkpoints。
 
 ---
 

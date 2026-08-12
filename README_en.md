@@ -1,123 +1,56 @@
-# vision-xai-reliability-lab
+# Vision XAI Reliability Lab
 
 [![CI](https://github.com/kuotunyu/vision-xai-reliability-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/kuotunyu/vision-xai-reliability-lab/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?logo=pytorch&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688?logo=fastapi&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2EA44F.svg)](LICENSE)
 
-**A reliability-first XAI benchmark showing why visually plausible heatmaps can still fail.** ConvNeXt-Tiny and ViT-B/16 are evaluated on Oxford-IIIT Pet across localization, causal faithfulness, model-randomization sanity checks, stability, and a deliberately falsifiable spurious-cue experiment.
+This reliability-first Vision XAI benchmark evaluates ConvNeXt-Tiny and ViT-B/16 across Localization, Faithfulness, Model Randomization, Flip Consistency, and a falsifiable Spurious Patch experiment.
 
-[正體中文](README.md) · [→ Explore the results](https://kuotunyu.github.io/vision-xai-reliability-lab/) · [→ Reproduce locally](#quickstart) · [→ Audit the evidence](ARTIFACTS.md) · [→ Read the model card](MODEL_CARD.md)
+Its purpose is not to produce prettier heatmaps, but to test whether they depend on learned model evidence and whether the resulting claims can be recomputed, audited, and challenged.
+
+[Results](https://kuotunyu.github.io/vision-xai-reliability-lab/) · [Quickstart](#quickstart) · [Evidence](ARTIFACTS.md) · [Model Card](MODEL_CARD.md) · [正體中文](README.md)
 
 ![Vision XAI reliability evidence](assets/portfolio/hero.png)
 
-> **A heatmap is not proof of causal reasoning.** This project measures where attribution methods hold up, where they break, and protects the empirical evidence from being altered by smoke tests or CI runs.
+> **A heatmap is not proof of causal reasoning.** Statistical checks identify where explanations hold or fail, while a SHA-256 manifest prevents smoke tests or CI from rewriting formal results.
 
-The weight-free [static results showcase source](showcase/) turns those committed aggregates into a focused portfolio walkthrough. It loads no model, dataset, backend, analytics, or external JavaScript.
-
----
-
-## What this experiment found
-
-1. **Center Prior Exposure**:
-   A fixed center prior reached **0.922 pointing-game accuracy** for both model families, beating every evaluated attribution method. That exposes dataset composition bias and is localization evidence, not causal faithfulness.
-2. **Integrated Gradients Failed Model-Randomization Sanity Expectation**:
-   Its maps retained about 0.47–0.48 absolute Spearman similarity after head randomization, substantially higher than the other evaluated methods (healthy explanations should be sensitive to randomized weights).
-3. **Spurious-patch Experiment as a Negative Result**:
-   Under this frozen-backbone, head-only regime, the models did not learn the intended shortcut. This honest negative result is not evidence that vision models generally resist spurious cues.
-
-These are real full-scale results: all four classifier heads trained on the complete dataset on a Google Colab NVIDIA L4. Attribution-derived metrics use a fixed 500-sample subset of the test split, not the complete test split. The immutable aggregate and provenance are documented in [ARTIFACTS.md](ARTIFACTS.md).
+The weight-free [static showcase source](showcase/) reads only committed aggregate artifacts. It loads no model, dataset, backend, analytics, or external JavaScript.
 
 ---
 
-## System Architecture & Pipeline
+## Three core findings
 
-### 1. Multi-dimensional XAI Reliability Pipeline
+1. **Center Prior wins Pointing Game.** A fixed Center Prior reached **0.922** for both model families, above every evaluated Attribution method. This is evidence of dataset composition bias and Localization—not causal Faithfulness.
+2. **Integrated Gradients fails Model Randomization.** Its maps retain about **0.47–0.48** absolute Spearman similarity after Head Randomization, substantially above the other evaluated methods.
+3. **Spurious Patch is a negative result.** Under this frozen-backbone, head-only regime, neither model learned the intended corner-patch shortcut. This does not show that vision models generally resist spurious cues.
 
-```mermaid
-%%{init: {'themeVariables': {'fontSize': '18px'}}}%%
-flowchart TD
-    subgraph DataStage ["Phase 1: Deterministic Data Engineering & Intervention"]
-        direction LR
-        Raw[("Oxford-IIIT Pet Dataset<br/>(37 pet categories)")] --> Trimap["Trimap Semantic Validation<br/>(Pet mask / background / border)"] --> Patch[("Spurious Corner Patch<br/>(Correlated cue injection)")] --> Manifest[("Deterministic Manifest<br/>(SHA-256 Dataset Fingerprint)")]
-    end
+These are real full-scale results: all four classifier heads trained on the complete training split on an NVIDIA L4. Attribution metrics use a fixed 500-sample subset of the test split, **not the complete test split**. Aggregates, provenance, and limitations are documented in [ARTIFACTS.md](ARTIFACTS.md) and [FAILURES.md](FAILURES.md).
 
-    subgraph TrainStage ["Phase 2: Model Training & Attribution Methods"]
-        direction LR
-        Manifest --> Models["Dual Vision Architectures<br/>(ConvNeXt-Tiny vs ViT-B/16)"] --> Train["Head-only Training & Checkpoints<br/>(CUDA AMP mixed precision)"] --> XAI["Attribution Methods<br/>(Grad-CAM · IG · Occlusion · Baselines)"]
-    end
+---
 
-    subgraph EvalStage ["Phase 3: Five Reliability Dimensions Evaluation"]
-        direction LR
-        XAI --> D1["1. Localization<br/>(Pointing Game · Energy)"] & D2["2. Causal Faithfulness<br/>(Deletion / Insertion AUC)"] & D3["3. Sanity Randomization<br/>(Model Randomization Test)"]
-        D1 & D2 & D3 --> Summary[("Immutable Aggregate Report<br/>(results/derived/summary.json)")]
-    end
-
-    DataStage --> TrainStage --> EvalStage
-
-    classDef srcStyle fill:#e7f5ff,stroke:#1971c2,stroke-width:2px,color:#212529
-    classDef procStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#212529
-    classDef evalStyle fill:#e6fcf5,stroke:#0ca678,stroke-width:2px,color:#212529
-
-    class Raw,Patch,Manifest,Summary srcStyle
-    class Trimap,Models,Train,XAI,D1,D2,D3 procStyle
-
-    style DataStage fill:#f8f9fa,stroke:#1971c2,stroke-width:2px,color:#1971c2,stroke-dasharray: 4 4
-    style TrainStage fill:#faf5ff,stroke:#7b1fa2,stroke-width:2px,color:#7b1fa2,stroke-dasharray: 4 4
-    style EvalStage fill:#f4fbf7,stroke:#0ca678,stroke-width:2px,color:#0ca678,stroke-dasharray: 4 4
-```
-
-### 2. Serving Architecture & Static Showcase
+## Evidence flow and local model
 
 ```mermaid
-%%{init: {'themeVariables': {'fontSize': '18px'}}}%%
-flowchart TD
-    subgraph CoreStage ["Phase 1: Core Verified Artifacts"]
-        direction LR
-        SumJSON[("Immutable Evidence<br/>(summary.json & figures)")] --> Showcase["Static Showcase Page<br/>(GitHub Pages zero-backend)"]
-    end
-
-    subgraph ServStage ["Phase 2: Local Serving & Interactive UI"]
-        direction LR
-        CKPT[("Model Checkpoints<br/>(Fine-tuned weights)")] --> API["FastAPI Backend<br/>(Lazy weight loading)"] --> WebUI(["Gradio UI<br/>(Interactive heatmap inspection)"])
-    end
-
-    subgraph GateStage ["Phase 3: Release Verification Gates"]
-        direction LR
-        SumJSON & CKPT --> Gate{"Verify Release Gates<br/>(SHA-256 hashes · sync checks)"} --> Public(["Clean Publication<br/>(Verified release)"])
-    end
-
-    CoreStage --> ServStage --> GateStage
-
-    classDef srcStyle fill:#e7f5ff,stroke:#1971c2,stroke-width:2px,color:#212529
-    classDef procStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#212529
-    classDef condStyle fill:#fff9db,stroke:#f59f00,stroke-width:2px,color:#212529
-    classDef safeStyle fill:#e6fcf5,stroke:#0ca678,stroke-width:2px,color:#212529
-
-    class SumJSON,CKPT srcStyle
-    class Showcase,API,WebUI procStyle
-    class Gate condStyle
-    class Public safeStyle
-
-    style CoreStage fill:#f8f9fa,stroke:#1971c2,stroke-width:2px,color:#1971c2,stroke-dasharray: 4 4
-    style ServStage fill:#faf5ff,stroke:#7b1fa2,stroke-width:2px,color:#7b1fa2,stroke-dasharray: 4 4
-    style GateStage fill:#f4fbf7,stroke:#0ca678,stroke-width:2px,color:#0ca678,stroke-dasharray: 4 4
+flowchart LR
+    Data["Oxford-IIIT Pet<br/>deterministic manifest"] --> Train["ConvNeXt-Tiny · ViT-B/16<br/>head-only training"]
+    Train --> Attr["Grad-CAM · Integrated Gradients<br/>Occlusion · baselines"]
+    Attr --> Eval["Localization · Faithfulness<br/>Randomization · Flip · Spurious Patch"]
+    Eval --> Evidence["Aggregate evidence<br/>95% bootstrap CI · SHA-256"]
+    Evidence --> Showcase["GitHub Pages<br/>weight-free showcase"]
+    Train -. user-supplied checkpoints .-> Local["FastAPI + Gradio<br/>local model workspace"]
+    Evidence --> Gate{"Release verifier"}
+    Local --> Gate
 ```
 
 ---
 
-## Project status
+## Release status
 
-| Stage | Scope | Status |
-|---|---|---|
-| Stage 0 | Packaging, lint/type/test gates, Docker CPU path, CI | Complete |
-| Stage 1 | Deterministic data pipeline, manifest, fingerprint, masks, resume | Complete |
-| Stage 2 | Head-only training, CUDA AMP, checkpoints, `--resume` | Complete |
-| Stage 3 | Grad-CAM, Integrated Gradients, Occlusion + three baselines | Complete |
-| Stage 4 | Localization, faithfulness, sanity, stability, spurious-cue evaluation | Complete |
-| Stage 5 | Machine-generated report and immutable public aggregates | Complete |
-| Stage 6 | FastAPI + Gradio application, with lazy weight loading | Complete |
+- **Full-scale evidence: verified.** Four classifier heads ran on the complete training split on an NVIDIA L4; the formal aggregates are protected by a SHA-256 manifest.
+- **CUDA resume canary: PASS.** A tiny synthetic RTX 4090 canary compared uninterrupted and epoch-boundary resume runs. Final head, optimizer, GradScaler, and stable metrics were exactly equal. It is not evidence for full training, and the training loop has no scheduler.
+- **Release gates: included.** Ruff, strict mypy, CPU tests, package checks, the showcase allowlist, and the release verifier require no GPU, dataset, weights, or secrets.
+- **Publication boundary: explicit.** The repository and GitHub Pages contain only source, aggregates, figures, and documentation. Datasets, weights, checkpoints, and runtime outputs are excluded; local Gradio use requires user-supplied checkpoints.
 
 ---
 
