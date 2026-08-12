@@ -113,12 +113,16 @@ def test_pages_workflow_builds_then_deploys_without_project_secrets() -> None:
     build_actions = {step.get("uses", "") for step in build_steps}
     assert "tools/build_showcase.py" in build_runs
     assert any(action.startswith("actions/upload-pages-artifact@") for action in build_actions)
+    assert not any(action.startswith("actions/configure-pages@") for action in build_actions)
     assert jobs["build"]["permissions"] == {"contents": "read"}
 
     deploy = jobs["deploy"]
     assert deploy["permissions"] == {"pages": "write", "id-token": "write"}
     assert "github.event_name == 'push'" in deploy["if"]
-    assert any(step.get("uses", "").startswith("actions/deploy-pages@") for step in deploy["steps"])
+    deploy_actions = {step.get("uses", "") for step in deploy["steps"]}
+    assert "actions/configure-pages@v6" in deploy_actions
+    assert "actions/deploy-pages@v5" in deploy_actions
+    assert workflow["concurrency"]["cancel-in-progress"] is False
     assert "secrets" not in workflow_path.read_text(encoding="utf-8")
 
 

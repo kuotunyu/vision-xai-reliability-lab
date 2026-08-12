@@ -10,7 +10,7 @@ permissions: {}
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -27,7 +27,6 @@ jobs:
       - run: uv sync --frozen --no-editable
       - run: uv run --no-sync python tools/build_showcase.py --root . --output .artifacts/showcase
       - run: uv run --no-sync python tools/build_showcase.py --audit .artifacts/showcase
-      - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
           path: .artifacts/showcase
@@ -43,6 +42,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
