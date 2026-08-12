@@ -288,3 +288,13 @@ def test_release_verifier_rejects_broken_local_markdown_link(tmp_path: Path) -> 
 
     assert result.returncode == 1
     assert "broken local Markdown link" in result.stderr
+
+
+def test_owner_actions_match_the_existing_github_repository() -> None:
+    owner_actions = (REPO_ROOT / "OWNER_ACTIONS.md").read_text(encoding="utf-8")
+
+    assert "Create an empty" not in owner_actions
+    assert "Add the GitHub remote" not in owner_actions
+    assert "git push origin main" in owner_actions
+    assert "CI and Pages" in owner_actions
+    assert "Do not create a tag or GitHub Release" in owner_actions

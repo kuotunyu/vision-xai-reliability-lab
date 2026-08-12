@@ -1,34 +1,37 @@
 # Owner actions after local release-candidate approval
 
-No remote, deployment, model-hosting, tag, or release state is changed by the
-local release workflow. The repository owner can perform the steps below after
-reviewing the final local commit.
+The public GitHub repository, `origin` remote, GitHub Actions, and Pages source
+already exist. This local release workflow does not push, deploy, tag, or change
+any other remote state.
 
-## GitHub repository setup
+## GitHub update checklist
 
-1. Create an empty **public** repository named
-   `vision-xai-reliability-lab`. Do not initialize it with another README,
-   license, or `.gitignore`.
-2. Configure the repository **About** panel:
-   - Repository description: `以可靠性為核心的 XAI benchmark：比較 ConvNeXt 與
-     ViT 的 localization、faithfulness、sanity checks 與可重現 CUDA resume
-     證據。`
+1. Review the unpublished local commits:
+
+   ```text
+   git log origin/main..main --oneline
+   ```
+
+2. When satisfied, push `main` yourself:
+
+   ```text
+   git push origin main
+   ```
+
+3. Confirm that CI and Pages workflows pass for the pushed head.
+   Then verify the README hero, local links, license, Pages model switch, and
+   public JSON/document links in the GitHub UI.
+4. Keep the repository **About** panel in Traditional Chinese (`zh-TW`):
+   - Repository description: `以可靠性為核心的 XAI benchmark：比較 ConvNeXt 與 ViT 的
+     localization、faithfulness、sanity checks 與可重現 CUDA resume 證據。`
    - Topics: `computer-vision`, `explainable-ai`, `trustworthy-ai`, `pytorch`,
      `machine-learning`, `model-evaluation`, `reproducibility`, `fastapi`, and
      `gradio`.
-   - Website: `https://kuotunyu.github.io/vision-xai-reliability-lab/` after
-     Pages succeeds.
-3. In **Settings → General → Social preview**, upload
-   `assets/portfolio/social-preview.png`.
-4. In **Settings → Pages**, select **GitHub Actions** as the build and
-   deployment source.
-5. Add the GitHub remote locally and push `main` manually. Do not add the raw
-   Oxford-IIIT Pet dataset, checkpoints, pretrained weights, or ignored
-   `.artifacts/` outputs.
-6. Confirm that both `ci` jobs pass and that the `pages` workflow publishes the
-   18-file allowlisted showcase. Verify the README hero, local links, license,
-   Pages model switch, and public JSON/document links in the GitHub UI.
-7. Pin the repository on the GitHub profile after those checks pass.
+   - Website: `https://kuotunyu.github.io/vision-xai-reliability-lab/`.
+5. In **Settings → General → Social preview**, upload
+   `assets/portfolio/social-preview.png` if the current preview is missing or
+   outdated.
+6. Pin the repository on the GitHub profile after the pushed checks pass.
 
 The GitHub README, About description, Pages showcase, and Gradio workbench use
 Traditional Chinese (`zh-TW`) as the primary language while retaining English
@@ -39,11 +42,11 @@ CUDA canary, and six aggregate figures—never the dataset, weights, or checkpoi
 
 ## Release decision
 
-Only after the pushed commit passes CI should the owner decide whether to
-create a version tag or GitHub Release. The local candidate intentionally has
-neither. The Pages site is a static results showcase, not a live inference
-demo; it needs no API deployment, GPU, dataset, model weight, account token, or
-project secret.
+Do not create a tag or GitHub Release until the pushed commit passes CI and the
+Pages evidence links have been checked. The local candidate intentionally has
+neither. The Pages site is a static results showcase, not a live inference demo;
+it needs no API deployment, GPU, dataset, model weight, account token, or project
+secret.
 
 Do not rerun or replace the committed full-scale L4 aggregate merely to publish
 the repository. Any future broader claims require separately recorded evidence.
