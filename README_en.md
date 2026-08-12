@@ -14,9 +14,11 @@
 
 > **A heatmap is not proof of causal reasoning.** This project measures where attribution methods hold up, where they break, and protects the empirical evidence from being altered by smoke tests or CI runs.
 
+The weight-free [static results showcase source](showcase/) turns those committed aggregates into a focused portfolio walkthrough. It loads no model, dataset, backend, analytics, or external JavaScript.
+
 ---
 
-## Key Findings & Methodological Insights
+## What this experiment found
 
 1. **Center Prior Exposure**:
    A fixed center prior reached **0.922 pointing-game accuracy** for both model families, beating every evaluated attribution method. That exposes dataset composition bias and is localization evidence, not causal faithfulness.
@@ -24,6 +26,8 @@
    Its maps retained about 0.47–0.48 absolute Spearman similarity after head randomization, substantially higher than the other evaluated methods (healthy explanations should be sensitive to randomized weights).
 3. **Spurious-patch Experiment as a Negative Result**:
    Under this frozen-backbone, head-only regime, the models did not learn the intended shortcut. This honest negative result is not evidence that vision models generally resist spurious cues.
+
+These are real full-scale results: all four classifier heads trained on the complete dataset on a Google Colab NVIDIA L4. Attribution-derived metrics use a fixed 500-sample subset of the test split, not the complete test split. The immutable aggregate and provenance are documented in [ARTIFACTS.md](ARTIFACTS.md).
 
 ---
 
@@ -103,7 +107,7 @@ flowchart TD
 
 ---
 
-## Project Status
+## Project status
 
 | Stage | Scope | Status |
 |---|---|---|

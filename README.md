@@ -14,6 +14,8 @@
 
 > **熱力圖不是因果推理的證據。** 本專案不只展示解釋視覺化，而是以嚴謹的統計指標量測解釋在何處成立、在何處失效，並透過不可變 Hash 簽章保護評測證據不被 Smoke 測試或 CI 流程改寫。
 
+不含 weights 的[靜態結果展示原始檔](showcase/)會把這些 committed aggregates 整理成作品集導覽；它不載入模型、資料集、後端服務、analytics 或外部 JavaScript。
+
 ---
 
 ## 核心發現與方法學翻轉
@@ -24,6 +26,8 @@
    在 Head Randomization 後，Integrated Gradients 仍保留約 0.47–0.48 的絕對 Spearman 相似度，顯著高於其他方法（健全之歸因應對權重隨機化敏感）。
 3. **Spurious-patch 捷徑特徵負結果**：
    在 Frozen-backbone、Head-only 訓練設定下，模型並未依賴注入之角隅 Shortcut Patch；此負結果誠實記錄，不應過度解讀為 Vision Model 天生免疫 Spurious Cue。
+
+這些數字來自真實的 full-scale L4 run：四個 classifier heads 以完整資料集訓練。Attribution-derived metrics 使用 test split 中固定的 500 samples，不是完整 test split。不可變的 aggregate 與來源紀錄見 [ARTIFACTS.md](ARTIFACTS.md)。
 
 ---
 
