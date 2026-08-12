@@ -91,8 +91,8 @@ def test_showcase_source_has_accessible_evidence_structure() -> None:
     assert all(image.get("alt") for image in parser.images)
     assert parser.local_resources == ["styles.css", "app.js"]
     assert "不是 live inference demo" in html
-    assert "固定 500 筆 attribution subset" in html
-    assert "localization 不是 causal faithfulness" in html
+    assert "固定 500 筆歸因子集" in html
+    assert "定位能力不代表因果忠實度\uff08causal faithfulness\uff09" in html
     assert 'data-metric="spurious-patch-energy"' in html
 
 
@@ -102,13 +102,13 @@ def test_showcase_uses_zh_tw_for_interface_scaffolding() -> None:
     assert "完整規模 / 2026.07.25" in html
     assert "<dt>訓練</dt>" in html
     assert "<dt>信賴區間</dt>" in html
-    assert "Localization 與 baseline" in html
-    assert "Model-randomization sanity check" in html
-    assert "Spurious-patch experiment" in html
-    assert "已提交的完整規模彙總" in html
-    assert "公開 artifact 的驗證範圍" in html
+    assert "定位能力與基準" in html
+    assert "模型隨機化檢查" in html
+    assert "Spurious patch 負結果" in html
+    assert "完整規模結果與模型比較" in html
+    assert "公開產物的驗證範圍" in html
     assert "實驗結果、證據邊界與限制" in html
-    assert "開啟正式結果 JSON" in html
+    assert "開啟結果 JSON" in html
     assert "Localization trap" not in html
     assert "Sanity failure" not in html
     assert "Negative result" not in html
@@ -117,44 +117,56 @@ def test_showcase_uses_zh_tw_for_interface_scaffolding() -> None:
     assert "開啟 CANONICAL JSON" not in html
 
 
-def test_showcase_uses_research_report_copy_and_readable_density() -> None:
+def test_showcase_uses_zh_tw_research_copy_and_a_compact_type_scale() -> None:
     html = (REPO_ROOT / "showcase" / "index.html").read_text(encoding="utf-8")
     css = (REPO_ROOT / "showcase" / "styles.css").read_text(encoding="utf-8")
+    javascript = (REPO_ROOT / "showcase" / "app.js").read_text(encoding="utf-8")
 
     headings = [
         " ".join(re.sub(r"<[^>]+>", "", heading).split())
         for heading in re.findall(r"<h[1-3][^>]*>(.*?)</h[1-3]>", html, flags=re.DOTALL)
     ]
 
-    assert headings[0] == "Vision XAI 的可靠性評估"
-    assert "主要實驗結果與解讀限制" in headings
-    assert "各項 metric 回答不同的評估問題" in headings
-    assert "CUDA resume canary 的 state-equivalence 檢查" in headings
+    assert headings[0] == "Vision XAI 可靠性評估"
+    assert "主要結果與解讀限制" in headings
+    assert "CUDA 續訓 canary\uff1a狀態等價性檢查" in headings
     assert all("\uff1f" not in heading and "\uff01" not in heading for heading in headings)
-    assert "三個可被推翻的結果" not in html
-    assert "好看\uff0c不是一項 metric" not in html
-    assert "<strong>Google Colab · NVIDIA L4</strong>" in html
+    assert "model family" not in html
+    assert "Canonical full-scale JSON" not in html
+    assert "attribution method" not in html
+    assert "attribution subset" not in html
+    assert "IG 未通過模型隨機化檢查" in html
+    assert "展開定位能力、忠實度與模型隨機化檢查的差異" in html
+    assert "<strong>Colab · NVIDIA L4</strong>" in html
+    assert '<details class="method-matrix">' in html
+    assert "指標解讀表" in html
+    assert "finding-index" not in html
+    assert html.count('class="finding-head"') == 3
+    assert '? "完全一致" : "存在差異"' in javascript
+    assert "Machine-readable evidence" not in javascript
 
     assert re.search(r"html\s*\{[^}]*font-size:\s*18px", css, flags=re.DOTALL)
     assert re.search(r"--max:\s*76rem", css)
-    assert re.search(
-        r"h1\s*\{[^}]*font-size:\s*clamp\(2rem,\s*3vw,\s*2\.7rem\)",
-        css,
-        flags=re.DOTALL,
-    )
-    assert re.search(
-        r"h2\s*\{[^}]*font-size:\s*clamp\(1\.45rem,\s*1\.9vw,\s*1\.85rem\)",
-        css,
-        flags=re.DOTALL,
-    )
+    assert "--type-meta: .9rem" in css
+    assert "--type-body: 1rem" in css
+    assert "--type-title: 1.1rem" in css
+    assert "--type-section: clamp(1.45rem, 1.7vw, 1.6rem)" in css
+    assert "--type-display: clamp(1.9rem, 2.4vw, 2.4rem)" in css
+    assert "--type-metric: clamp(2rem, 2.5vw, 2.4rem)" in css
+    assert ".95rem" not in css
     assert re.search(
         r"\.findings,\s*\.evidence,\s*\.cuda,\s*\.boundary\s*"
-        r"\{\s*padding:\s*1\.75rem 0;\s*\}",
+        r"\{\s*padding:\s*1\.25rem 0;\s*\}",
         css,
     )
     assert re.search(r"\.masthead\s*\{[^}]*align-items:\s*start", css, flags=re.DOTALL)
     assert re.search(
         r"\.run-stamp\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*1fr auto",
+        css,
+        flags=re.DOTALL,
+    )
+    assert re.search(
+        r"\.finding-grid\s*\{[^}]*gap:\s*0;[^}]*border:\s*1px solid var\(--line\)",
         css,
         flags=re.DOTALL,
     )

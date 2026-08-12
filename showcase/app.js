@@ -72,15 +72,15 @@ function selectModel(key) {
   const faithfulness = document.querySelector("#faithfulness-figure");
   const spurious = document.querySelector("#spurious-figure");
   localization.src = model.localization;
-  localization.alt = model.label + " localization aggregate chart，含 95% bootstrap CI";
+  localization.alt = model.label + " localization 彙總圖，含 95% bootstrap CI";
   faithfulness.src = model.faithfulness;
-  faithfulness.alt = model.label + " deletion 與 insertion faithfulness curves";
+  faithfulness.alt = model.label + " deletion 與 insertion faithfulness 曲線";
   spurious.src = model.spurious;
-  spurious.alt = model.label + " spurious patch attribution-energy aggregate chart";
+  spurious.alt = model.label + " spurious patch 歸因能量彙總圖";
 
-  document.querySelector("#localization-title").textContent = model.label + " localization";
-  document.querySelector("#faithfulness-title").textContent = model.label + " faithfulness";
-  document.querySelector("#spurious-title").textContent = model.label + " patched model";
+  document.querySelector("#localization-title").textContent = model.label + "：localization";
+  document.querySelector("#faithfulness-title").textContent = model.label + "：faithfulness";
+  document.querySelector("#spurious-title").textContent = model.label + "：spurious patch";
 
   if (!fullSummary) return;
   const train = fullSummary.train[model.variant];
@@ -134,14 +134,14 @@ async function loadEvidence() {
     };
     Object.entries(canaryMap).forEach(([elementName, evidenceName]) => {
       const element = document.querySelector("[data-canary='" + elementName + "']");
-      element.textContent = canary.comparisons[evidenceName] ? "exact" : "difference";
+      element.textContent = canary.comparisons[evidenceName] ? "完全一致" : "存在差異";
     });
 
     const selected = document.querySelector("[data-model][aria-pressed='true']");
     selectModel(selected ? selected.dataset.model : "cnn");
-    status.textContent = "Canonical full-scale JSON 已載入，schema 與 scope 驗證通過。";
+    status.textContent = "完整規模 JSON 已載入，資料結構與範圍驗證通過。";
   } catch (error) {
-    status.textContent = "Machine-readable evidence 載入失敗；數值維持不可用，請檢查 artifact。";
+    status.textContent = "實驗證據載入失敗；數值暫不顯示，請檢查 artifact。";
   }
 }
 

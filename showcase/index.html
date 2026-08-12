@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="比較 CNN 與 Vision Transformer attribution method 的可靠性、實驗結果與限制。">
+  <meta name="description" content="比較 CNN 與 Vision Transformer 歸因方法的可靠性、實驗結果與限制。">
   <meta name="theme-color" content="#07131d">
-  <title>Vision XAI Reliability Lab：實驗證據展示</title>
+  <title>Vision XAI 可靠性實驗室：實驗證據</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -18,8 +18,8 @@
     <nav aria-label="作品導覽">
       <a href="#findings">核心結論</a>
       <a href="#evidence">實驗證據</a>
-      <a href="#cuda">CUDA canary</a>
-      <a href="#boundary">公開邊界</a>
+      <a href="#cuda">CUDA 續訓</a>
+      <a href="#boundary">公開範圍</a>
     </nav>
     <a class="repo-link" href="https://github.com/kuotunyu/vision-xai-reliability-lab">原始碼 ↗</a>
   </header>
@@ -27,20 +27,20 @@
   <main id="main">
     <section class="masthead" id="top" aria-labelledby="hero-title">
       <div class="masthead-copy">
-        <h1 id="hero-title">Vision XAI 的可靠性評估</h1>
-        <p class="lede">比較 ConvNeXt-Tiny 與 ViT-B/16 的 attribution method，分別檢查
-          localization、faithfulness 與 model-randomization sensitivity，並明確標示資料範圍與限制。</p>
+        <h1 id="hero-title">Vision XAI 可靠性評估</h1>
+        <p class="lede">比較 ConvNeXt-Tiny 與 ViT-B/16 的歸因方法，從定位能力（localization）、
+          忠實度（faithfulness）與模型隨機化三個面向檢驗可靠性，並標示資料範圍與限制。</p>
         <div class="masthead-actions">
-          <a class="button primary" href="#evidence">檢查實驗證據</a>
-          <a class="button quiet" href="data/summary.json">開啟正式結果 JSON</a>
+          <a class="button primary" href="#evidence">查看實驗證據</a>
+          <a class="button quiet" href="data/summary.json">開啟結果 JSON</a>
         </div>
       </div>
       <aside class="run-stamp" aria-label="實驗範圍">
         <span class="stamp-index">完整規模 / 2026.07.25</span>
-        <strong>Google Colab · NVIDIA L4</strong>
+        <strong>Colab · NVIDIA L4</strong>
         <dl>
           <div><dt>訓練</dt><dd>完整資料集</dd></div>
-          <div><dt>Attribution</dt><dd>固定 500 筆 attribution subset</dd></div>
+          <div><dt>歸因評估</dt><dd>固定 500 筆歸因子集</dd></div>
           <div><dt>信賴區間</dt><dd>95% bootstrap CI</dd></div>
         </dl>
       </aside>
@@ -48,29 +48,35 @@
 
     <section class="findings" id="findings" aria-labelledby="findings-title">
       <div class="section-heading">
-        <h2 id="findings-title">主要實驗結果與解讀限制</h2>
+        <h2 id="findings-title">主要結果與解讀限制</h2>
       </div>
       <div class="finding-grid">
         <article class="finding cyan">
-          <p class="finding-index">Localization 與 baseline</p>
-          <strong class="metric" data-metric="center-pointing">—</strong>
-          <h3>Center prior 的 pointing game 分數較高</h3>
-          <p>固定 center blob 的 pointing game 分數高於所有受測 attribution method，顯示
-            localization 指標會受到 dataset composition bias 影響；localization 不是 causal faithfulness。</p>
+          <div class="finding-head">
+            <h3>定位能力與基準</h3>
+            <strong class="metric" data-metric="center-pointing">—</strong>
+          </div>
+          <p class="finding-summary">Center prior 的 pointing game 分數較高</p>
+          <p>固定中心 blob 的分數高於所有受測歸因方法，顯示定位結果會受資料集組成偏差影響；
+            定位能力不代表因果忠實度（causal faithfulness）。</p>
         </article>
         <article class="finding coral">
-          <p class="finding-index">Model-randomization sanity check</p>
-          <strong class="metric" data-metric="ig-randomization">—</strong>
-          <h3>IG 未通過 randomization sanity check</h3>
-          <p>Integrated Gradients 在 head randomization 後仍保留顯著 similarity，
-            未符合預先定義的低 similarity expectation。</p>
+          <div class="finding-head">
+            <h3>模型隨機化檢查</h3>
+            <strong class="metric" data-metric="ig-randomization">—</strong>
+          </div>
+          <p class="finding-summary">IG 未通過模型隨機化檢查</p>
+          <p>Integrated Gradients 在分類 head 隨機化後仍高度相似，
+            未達預先定義的低相似度門檻。</p>
         </article>
         <article class="finding lime">
-          <p class="finding-index">Spurious-patch experiment</p>
-          <strong class="metric" data-metric="spurious-patch-energy">—</strong>
-          <h3>未觀察到預期的 patch shortcut</h3>
-          <p>Frozen-backbone、head-only model 未學到預期的 patch shortcut。
-            此負結果僅適用於本實驗設定，不延伸為 general robustness。</p>
+          <div class="finding-head">
+            <h3>Spurious patch 負結果</h3>
+            <strong class="metric" data-metric="spurious-patch-energy">—</strong>
+          </div>
+          <p class="finding-summary">未觀察到預期的 shortcut</p>
+          <p>Frozen backbone 與 head-only model 未學到預期的 patch shortcut。
+            此負結果僅適用於本實驗設定，不延伸為整體穩健性（general robustness）。</p>
         </article>
       </div>
     </section>
@@ -78,102 +84,101 @@
     <section class="evidence" id="evidence" aria-labelledby="evidence-title">
       <div class="section-heading split-heading">
         <div>
-          <h2 id="evidence-title">已提交的完整規模彙總與 model family 比較</h2>
+          <h2 id="evidence-title">完整規模結果與模型比較</h2>
         </div>
-        <div class="model-switch" role="group" aria-label="選擇 model family">
+        <div class="model-switch" role="group" aria-label="選擇模型">
           <button type="button" data-model="cnn" aria-pressed="true">ConvNeXt</button>
           <button type="button" data-model="vit" aria-pressed="false">ViT-B/16</button>
         </div>
       </div>
 
       <p class="data-status" id="data-status" role="status">
-        正在載入並驗證 machine-readable 證據…
+        正在載入並驗證實驗證據…
       </p>
 
       <div class="model-strip" aria-live="polite">
-        <div><span>驗證集 accuracy</span><strong data-metric="val-accuracy">—</strong></div>
+        <div><span>驗證集準確率</span><strong data-metric="val-accuracy">—</strong></div>
         <div><span>驗證集 macro-F1</span><strong data-metric="val-f1">—</strong></div>
-        <div><span>最佳 attribution / pointing</span><strong data-metric="best-pointing">—</strong></div>
-        <div><span>IG / randomized</span><strong data-metric="ig-randomization-compact">—</strong></div>
+        <div><span>最佳歸因方法 / pointing game</span><strong data-metric="best-pointing">—</strong></div>
+        <div><span>IG / 隨機化後</span><strong data-metric="ig-randomization-compact">—</strong></div>
       </div>
 
       <div class="figure-grid">
         <figure>
-          <div class="figure-label"><span>圖 A</span><strong id="localization-title">ConvNeXt localization</strong></div>
+          <div class="figure-label"><span>圖 A</span><strong id="localization-title">ConvNeXt：localization</strong></div>
           <img id="localization-figure" src="assets/figures/localization_cnn.png"
-               alt="ConvNeXt localization aggregate chart，含 95% bootstrap confidence interval">
-          <figcaption id="localization-caption">Pet mask 內的 attribution energy；pointing game 另行摘要。
-            兩種 localization metric 都不能證明 causal faithfulness。</figcaption>
+               alt="ConvNeXt localization 彙總圖，含 95% bootstrap CI">
+          <figcaption id="localization-caption">Pet mask 內的歸因能量；pointing game 另行摘要。
+            兩種 localization 指標都不能證明 causal faithfulness。</figcaption>
         </figure>
         <figure>
-          <div class="figure-label"><span>圖 B</span><strong id="faithfulness-title">ConvNeXt faithfulness</strong></div>
+          <div class="figure-label"><span>圖 B</span><strong id="faithfulness-title">ConvNeXt：faithfulness</strong></div>
           <img id="faithfulness-figure" src="assets/figures/faithfulness_cnn.png"
-               alt="ConvNeXt deletion 與 insertion faithfulness curves">
+               alt="ConvNeXt deletion 與 insertion faithfulness 曲線">
           <figcaption id="faithfulness-caption">Deletion 越低越好，insertion 越高越好；
-            reference baseline 會保留，不會為了版面好看而移除。</figcaption>
+            圖中保留 reference baseline，避免選擇性呈現。</figcaption>
         </figure>
       </div>
 
-      <div class="method-matrix">
-        <div>
-          <h3>各項 metric 回答不同的評估問題</h3>
-          <p>這份 benchmark 分開呈現 localization、faithfulness 與 sanity check，避免將良好的
-            localization score 誤解為 model sensitivity。</p>
-        </div>
-        <div class="table-wrap">
+      <details class="method-matrix">
+        <summary><strong>指標解讀表</strong><span>展開定位能力、忠實度與模型隨機化檢查的差異</span></summary>
+        <div class="method-matrix-content">
+          <p>本實驗分開呈現三種評估面向，避免將良好的定位分數誤解為模型敏感度。</p>
+          <div class="table-wrap">
           <table>
             <thead>
               <tr><th>評估面向</th><th>它回答什麼？</th><th>健康方向</th></tr>
             </thead>
             <tbody>
-              <tr><td>Localization</td><td>Attribution 落在哪裡？</td><td>高，且必須比較 baseline</td></tr>
-              <tr><td>Deletion</td><td>移除 salient content 會傷害 prediction 嗎？</td><td>較低 AUC</td></tr>
-              <tr><td>Insertion</td><td>還原 salient content 會幫助 prediction 嗎？</td><td>較高 AUC</td></tr>
-              <tr><td>Randomization</td><td>Map 是否依賴 learned parameters？</td><td>低 similarity</td></tr>
-              <tr><td>Flip consistency</td><td>已知 transform 下是否穩定？</td><td>高 similarity</td></tr>
+              <tr><td>Localization</td><td>歸因結果落在哪裡？</td><td>高，且必須比較 baseline</td></tr>
+              <tr><td>Deletion</td><td>移除高顯著性內容後，模型預測是否下降？</td><td>較低 AUC</td></tr>
+              <tr><td>Insertion</td><td>還原高顯著性內容後，模型預測是否上升？</td><td>較高 AUC</td></tr>
+              <tr><td>Randomization</td><td>歸因圖是否依賴已學習參數？</td><td>低 similarity</td></tr>
+              <tr><td>Flip consistency</td><td>已知變換下是否穩定？</td><td>高 similarity</td></tr>
             </tbody>
           </table>
+          </div>
         </div>
-      </div>
+      </details>
 
       <figure class="wide-figure">
-        <div class="figure-label"><span>圖 C</span><strong id="spurious-title">ConvNeXt patched model</strong></div>
+        <div class="figure-label"><span>圖 C</span><strong id="spurious-title">ConvNeXt：spurious patch</strong></div>
         <img id="spurious-figure" src="assets/figures/spurious_cnn_patched.png"
-             alt="ConvNeXt spurious patch attribution-energy aggregate chart">
+             alt="ConvNeXt spurious patch 歸因能量彙總圖">
         <figcaption id="spurious-caption">Correlated、counter-correlated 與 no-patch input 的
-          accuracy 幾乎不變，patch energy 也很低：這是一項負結果。</figcaption>
+          準確率幾乎不變，patch energy 也很低；這是一項負結果。</figcaption>
       </figure>
     </section>
 
     <section class="cuda" id="cuda" aria-labelledby="cuda-title">
       <div class="cuda-orbit" aria-hidden="true"><span></span><span></span><span></span></div>
       <div class="cuda-copy">
-        <h2 id="cuda-title">CUDA resume canary 的 state-equivalence 檢查</h2>
-        <p>小型 deterministic CUDA workload 先完整執行，再於 epoch boundary
-          可控中斷並以 fresh process resume。這是 canary，不是完整 L4 experiment 重跑。</p>
-        <a class="text-link" href="data/cuda-resume-canary.json">閱讀 canary 證據 →</a>
+        <h2 id="cuda-title">CUDA 續訓 canary：狀態等價性檢查</h2>
+        <p>以小型、可重現的 CUDA 工作負載建立不中斷參考組（uninterrupted reference），再於 epoch 邊界
+          控制中斷，並由新的 process 恢復訓練。這只驗證續訓機制，不等同完整 L4 實驗。</p>
+        <a class="text-link" href="data/cuda-resume-canary.json">查看 canary 證據 →</a>
       </div>
       <ul class="state-list">
-        <li><span>分類 head state</span><strong data-canary="head">待驗證</strong></li>
+        <li><span>分類 head 狀態</span><strong data-canary="head">待驗證</strong></li>
         <li><span>Optimizer</span><strong data-canary="optimizer">待驗證</strong></li>
         <li><span>GradScaler</span><strong data-canary="scaler">待驗證</strong></li>
-        <li><span>穩定 metrics</span><strong data-canary="metrics">待驗證</strong></li>
-        <li><span>Scheduler</span><strong>not applicable</strong></li>
+        <li><span>穩定指標</span><strong data-canary="metrics">待驗證</strong></li>
+        <li><span>Scheduler</span><strong>不適用</strong></li>
       </ul>
     </section>
 
     <section class="boundary" id="boundary" aria-labelledby="boundary-title">
       <div class="section-heading">
-        <h2 id="boundary-title">公開 artifact 的驗證範圍</h2>
+        <h2 id="boundary-title">公開產物的驗證範圍</h2>
       </div>
       <div class="boundary-grid">
         <div class="boundary-card included">
           <span>已提交</span>
           <h3>你可以驗證的內容</h3>
           <ul>
-            <li>Canonical aggregate summary 與 schema</li>
-            <li>受 manifest 保護的圖表與作品視覺素材</li>
-            <li>CPU test、package、API、Gradio 與 Docker gates</li>
+            <li>正式彙總結果與 schema</li>
+            <li>經 manifest 驗證的圖表與視覺素材</li>
+            <li>CPU 測試、package、API、Gradio 與 Docker gates</li>
             <li>安全且範圍明確的 CUDA resume canary</li>
           </ul>
         </div>
@@ -182,16 +187,16 @@
           <h3>刻意不公開的內容</h3>
           <ul>
             <li>Oxford-IIIT Pet images 與原始資料集</li>
-            <li>Model weights 與訓練 checkpoints</li>
-            <li>Per-sample attribution arrays 與本機路徑</li>
-            <li>任何「tiny canary 等於 full training」的宣稱</li>
+            <li>Model weights 與訓練 checkpoint</li>
+            <li>逐樣本 attribution array 與本機路徑</li>
+            <li>任何「tiny canary 等同完整訓練」的宣稱</li>
           </ul>
         </div>
       </div>
       <p class="boundary-note"><strong>本頁為靜態結果展示，不是 live inference demo。</strong>
-        它不需要後端、GPU、資料集、checkpoint、secret、analytics 或外部 JavaScript。</p>
+        不需要後端、GPU、資料集、checkpoint、secret、analytics 或外部 JavaScript。</p>
       <div class="doc-links">
-        <a href="docs/ARTIFACTS.md"><span>01</span>Artifact boundary</a>
+        <a href="docs/ARTIFACTS.md"><span>01</span>Artifact 邊界</a>
         <a href="docs/MODEL_CARD.md"><span>02</span>Model card</a>
         <a href="docs/DATA_CARD.md"><span>03</span>Data card</a>
         <a href="data/artifact-manifest.json"><span>04</span>Hash manifest</a>
