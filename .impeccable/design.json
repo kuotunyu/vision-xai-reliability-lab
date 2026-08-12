@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-12T14:24:57.0440406+08:00",
+  "title": "Design System: Vision XAI Reliability Lab",
+  "extensions": {
+    "colorMeta": {
+      "canvas-ink": {
+        "role": "neutral",
+        "displayName": "Canvas Ink",
+        "canonical": "#07131d",
+        "tonalRamp": ["#02070b", "#07131d", "#102733", "#29434f", "#526b75", "#83969e", "#bdc8cc", "#edf1f2"]
+      },
+      "evidence-panel": {
+        "role": "neutral",
+        "displayName": "Evidence Panel",
+        "canonical": "#0c212c",
+        "tonalRamp": ["#061017", "#0c212c", "#173845", "#315563", "#587986", "#88a2ac", "#bfced3", "#eef3f4"]
+      },
+      "measured-cyan": {
+        "role": "primary",
+        "displayName": "Measured Cyan",
+        "canonical": "#42d2e1",
+        "tonalRamp": ["#062b30", "#07515b", "#087d8b", "#12a9ba", "#42d2e1", "#77e0e9", "#afeef2", "#e8fbfc"]
+      },
+      "failure-coral": {
+        "role": "secondary",
+        "displayName": "Failure Coral",
+        "canonical": "#ff785f",
+        "tonalRamp": ["#37100a", "#682016", "#9c3223", "#d24b36", "#ff785f", "#ff9f8d", "#ffc8bd", "#fff0ec"]
+      },
+      "verified-lime": {
+        "role": "tertiary",
+        "displayName": "Verified Lime",
+        "canonical": "#a7e33f",
+        "tonalRamp": ["#1c2d05", "#38570c", "#588317", "#79b128", "#a7e33f", "#c1ec73", "#dbf5a9", "#f2fce0"]
+      }
+    },
+    "typographyMeta": {
+      "display": {"displayName": "Display", "purpose": "Product and section conclusions in mixed Traditional Chinese and English."},
+      "body": {"displayName": "Body", "purpose": "Evidence interpretation, scope, and recovery instructions."},
+      "data-label": {"displayName": "Data Label", "purpose": "Measurements, versions, run metadata, and machine-readable references only."}
+    },
+    "shadows": [],
+    "motion": [
+      {"name": "state-fast", "value": "180ms ease", "purpose": "Hover and selected-state feedback on static showcase controls."}
+    ],
+    "breakpoints": [
+      {"name": "compact", "value": "760px"},
+      {"name": "medium", "value": "1080px"}
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main local-model action or primary evidence jump.",
+      "html": "<button class=\"ds-button-primary\">執行 explanation</button>",
+      "css": ".ds-button-primary { min-height: 50px; padding: 12px 20px; border: 0; border-radius: 10px; background: #42d2e1; color: #07131d; font: 800 1rem/1.2 'Noto Sans TC','Microsoft JhengHei',sans-serif; } .ds-button-primary:hover { background: #75e3ec; } .ds-button-primary:focus-visible { outline: 3px solid #f7c95c; outline-offset: 3px; }"
+    },
+    {
+      "name": "Evidence Chip",
+      "kind": "chip",
+      "refersTo": "evidence-chip",
+      "description": "Short scope, version, and state metadata.",
+      "html": "<span class=\"ds-evidence-chip\">500-sample attribution subset</span>",
+      "css": ".ds-evidence-chip { display: inline-flex; padding: 7px 11px; border: 1px solid #24414d; border-radius: 999px; background: #07131d; color: #42d2e1; font: 650 .78rem/1.35 'Cascadia Code',Consolas,monospace; }"
+    },
+    {
+      "name": "Evidence Panel",
+      "kind": "card",
+      "refersTo": "evidence-panel",
+      "description": "A bounded claim, evidence group, or readiness state.",
+      "html": "<section class=\"ds-evidence-panel\"><strong>Evidence boundary</strong><p>Claim、來源與限制保持在同一個閱讀區塊。</p></section>",
+      "css": ".ds-evidence-panel { padding: 20px; border: 1px solid #24414d; border-radius: 16px; background: #0c212c; color: #f3efe7; font: 400 17px/1.6 'Noto Sans TC','Microsoft JhengHei',sans-serif; } .ds-evidence-panel p { margin: 8px 0 0; color: #adc0c8; }"
+    },
+    {
+      "name": "Model Toggle",
+      "kind": "nav",
+      "description": "Two-state model-family switch inside the evidence layer.",
+      "html": "<nav class=\"ds-model-toggle\" aria-label=\"Model family\"><button aria-pressed=\"true\">ConvNeXt</button><button aria-pressed=\"false\">ViT-B/16</button></nav>",
+      "css": ".ds-model-toggle { display: inline-flex; padding: 5px; gap: 5px; border: 1px solid #24414d; background: #0c212c; } .ds-model-toggle button { min-height: 44px; padding: 10px 16px; border: 0; background: transparent; color: #adc0c8; font: 700 1rem/1.2 'Noto Sans TC','Microsoft JhengHei',sans-serif; } .ds-model-toggle button[aria-pressed='true'] { background: #42d2e1; color: #07131d; } .ds-model-toggle button:focus-visible { outline: 3px solid #f7c95c; outline-offset: 2px; }"
+    },
+    {
+      "name": "Finding Band",
+      "kind": "custom",
+      "description": "Continuous three-part band for the portfolio's falsifiable conclusions.",
+      "html": "<section class=\"ds-finding-band\"><article><strong>0.922</strong><span>Center prior 勝出</span></article><article><strong>0.47–0.48</strong><span>IG sanity failure</span></article><article><strong>1.26%</strong><span>Negative result</span></article></section>",
+      "css": ".ds-finding-band { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); overflow: hidden; border: 1px solid #24414d; border-radius: 16px; background: #0c212c; } .ds-finding-band article { display: grid; gap: 12px; padding: 22px; border-right: 1px solid #24414d; color: #f3efe7; } .ds-finding-band article:last-child { border-right: 0; } .ds-finding-band strong { color: #42d2e1; font: 650 2.4rem/1 'Cascadia Code',Consolas,monospace; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Evidence Workbench",
+    "overview": "The interface should feel like a clear, carefully labeled instrument used to inspect an experiment. Dense evidence, visible boundaries, and calm state colors carry the identity; decoration never competes with the claims. Traditional Chinese (`zh-TW`) is the primary reading language, while technical terms remain in their established English form.\n\nThe static showcase uses square editorial frames; the Gradio workbench uses gently rounded interactive panels. Both surfaces share one dark palette, one typographic voice, and one evidence-first reading order.",
+    "keyCharacteristics": [
+      "Dark navy work surface with warm off-white text.",
+      "Cyan for measured evidence, coral for failed expectations, and lime for verified states.",
+      "Large Traditional Chinese headings and compact monospace data labels.",
+      "Dense, responsive grids with explicit claim boundaries."
+    ],
+    "rules": [
+      {"name": "The Semantic Accent Rule", "body": "Cyan measures, coral challenges, and lime verifies; do not use these accents as arbitrary decoration.", "section": "colors"},
+      {"name": "The Evidence Boundary Rule", "body": "Every panel edge separates a claim, its evidence, or its scope.", "section": "colors"},
+      {"name": "The Plain Technical Term Rule", "body": "Keep `localization`, `faithfulness`, `checkpoint`, and related terms in English inside natural Traditional Chinese sentences.", "section": "typography"},
+      {"name": "The Flat Instrument Rule", "body": "Resting evidence is separated by tone and rule, not elevation.", "section": "elevation"}
+    ],
+    "dos": [
+      "Do lead with versioned measurements, then state interpretation and scope.",
+      "Do keep Traditional Chinese large enough to scan at desktop and mobile widths.",
+      "Do use the semantic accents consistently and provide a text label for every state.",
+      "Do fail closed with an em dash or a named error when evidence has not validated."
+    ],
+    "donts": [
+      "Don't use gradients, glass effects, decorative grid overlays, or persistent card shadows.",
+      "Don't use mono as a general-purpose technical costume or number sections that are not sequential.",
+      "Don't add empty panels, unavailable controls, or hierarchy that does not help inspect evidence.",
+      "Don't imply that localization proves causal faithfulness or that a tiny canary is full training."
+    ]
+  }
+}

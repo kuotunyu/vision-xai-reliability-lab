@@ -24,6 +24,20 @@
 6. 字級提高、控制項與內容改用緊湊 grid；避免空白 output panel、空 dropdown
    與重複標題。
 
+## Direction contract
+
+- **THESIS**：把作品做成可核對來源與限制的「證據工作台」，讓 evidence 比裝飾
+  更早進入視線。
+- **OWN-WORLD**：Evidence Cartography。深 navy 工作面、off-white 文字、cyan／coral／
+  lime 狀態色，以及像量測儀器一樣克制、密集的資料排列；不使用 hero illustration、
+  glassmorphism 或 decorative gradient。
+- **STORY**：先讀三個可被推翻的 full-scale 結論，再切換 model family 檢查 aggregate
+  figures，接著核對 metric boundary、CUDA resume canary 與公開 artifact 邊界。
+- **FIRST VIEWPORT**：產品名稱、evidence scope、兩個頂層頁籤與三個核心結論必須在
+  桌面首屏形成單一閱讀序列；mobile 則維持同樣順序，改為單欄。
+- **FORM**：`seed:user-direct/evidence-workbench+two-layers/v1`。這個 seed 來自使用者
+  明確指定「證據工作台」並確認「實驗證據＋本機模型」雙層，而非事後產生的概念名稱。
+
 ## 語言與內容架構
 
 ### README 與 About
