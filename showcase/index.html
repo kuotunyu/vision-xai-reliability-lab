@@ -5,13 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="以可靠性為核心，比較 CNN 與 Vision Transformer 的 XAI benchmark。">
   <meta name="theme-color" content="#07131d">
-  <title>Vision XAI Reliability Lab — 實驗證據展示</title>
+  <title>Vision XAI Reliability Lab：實驗證據展示</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <a class="skip-link" href="#main">跳至實驗證據</a>
-  <div class="page-grid" aria-hidden="true"></div>
-
   <header class="site-header">
     <a class="wordmark" href="#top" aria-label="Vision XAI Reliability Lab 首頁">
       <span class="wordmark-mark">VX</span>
@@ -29,7 +27,6 @@
   <main id="main">
     <section class="masthead" id="top" aria-labelledby="hero-title">
       <div class="masthead-copy">
-        <p class="eyebrow">Trustworthy vision / evidence field note</p>
         <h1 id="hero-title">Heatmap 經得起實驗證據檢驗嗎？</h1>
         <p class="lede">以 reliability-first 方法比較 ConvNeXt-Tiny 與 ViT-B/16；
           量測 attribution method 在哪裡成立，也公開它們在哪裡失敗。</p>
@@ -51,26 +48,25 @@
 
     <section class="findings" id="findings" aria-labelledby="findings-title">
       <div class="section-heading">
-        <p class="eyebrow">三個可被推翻的結果</p>
-        <h2 id="findings-title">不舒服的結果，才是這份實驗的重點。</h2>
+        <h2 id="findings-title">三個可被推翻的結果，才是這份實驗的重點。</h2>
       </div>
       <div class="finding-grid">
         <article class="finding cyan">
-          <p class="finding-index">01 / Localization trap</p>
+          <p class="finding-index">Localization trap</p>
           <strong class="metric" data-metric="center-pointing">—</strong>
           <h3>Center prior 勝出</h3>
           <p>固定 blob 在 pointing game 勝過所有受測 attribution method。
             它揭露 dataset composition bias；localization 不是 causal faithfulness。</p>
         </article>
         <article class="finding coral">
-          <p class="finding-index">02 / Sanity failure</p>
+          <p class="finding-index">Sanity failure</p>
           <strong class="metric" data-metric="ig-randomization">—</strong>
           <h3>IG 仍然太相似</h3>
           <p>Integrated Gradients 在 head randomization 後仍保留顯著 similarity。
             預先設定的 qualitative expectation 是：低才健康。</p>
         </article>
         <article class="finding lime">
-          <p class="finding-index">03 / Negative result</p>
+          <p class="finding-index">Negative result</p>
           <strong class="metric" data-metric="spurious-patch-energy">—</strong>
           <h3>預期的 shortcut 沒有出現</h3>
           <p>Frozen-backbone、head-only model 沒有學到預期的 patch shortcut。
@@ -82,8 +78,7 @@
     <section class="evidence" id="evidence" aria-labelledby="evidence-title">
       <div class="section-heading split-heading">
         <div>
-          <p class="eyebrow">Committed full-scale aggregates</p>
-          <h2 id="evidence-title">同一套 benchmark，兩種 model family。</h2>
+          <h2 id="evidence-title">Committed full-scale aggregates：同一套 benchmark，兩種 model family。</h2>
         </div>
         <div class="model-switch" role="group" aria-label="選擇 model family">
           <button type="button" data-model="cnn" aria-pressed="true">ConvNeXt</button>
@@ -121,7 +116,6 @@
 
       <div class="method-matrix">
         <div>
-          <p class="eyebrow">Evaluation matrix</p>
           <h3>好看，不是一項 metric。</h3>
           <p>每一個 lens 回答不同問題。這份 benchmark 刻意分開呈現，避免良好的
             localization score 被誤解為 model sensitivity。</p>
@@ -154,8 +148,7 @@
     <section class="cuda" id="cuda" aria-labelledby="cuda-title">
       <div class="cuda-orbit" aria-hidden="true"><span></span><span></span><span></span></div>
       <div>
-        <p class="eyebrow">RTX 4090 / isolated canary</p>
-        <h2 id="cuda-title">Resume state，逐項 exact comparison。</h2>
+        <h2 id="cuda-title">RTX 4090 CUDA resume：逐項 exact comparison。</h2>
         <p>Tiny deterministic CUDA workload 先 uninterrupted 執行，再於 epoch boundary
           可控中斷並以 fresh process resume。這是 canary，不是 L4 full experiment 重跑。</p>
       </div>
@@ -171,8 +164,7 @@
 
     <section class="boundary" id="boundary" aria-labelledby="boundary-title">
       <div class="section-heading">
-        <p class="eyebrow">Public evidence boundary</p>
-        <h2 id="boundary-title">可以 audit，但不假裝是 live。</h2>
+        <h2 id="boundary-title">Public evidence boundary：可以 audit，但不假裝是 live。</h2>
       </div>
       <div class="boundary-grid">
         <div class="boundary-card included">

@@ -95,6 +95,20 @@ def test_showcase_source_has_accessible_evidence_structure() -> None:
     assert 'data-metric="spurious-patch-energy"' in html
 
 
+def test_showcase_avoids_decorative_scaffolding_and_system_display_type() -> None:
+    html = (REPO_ROOT / "showcase" / "index.html").read_text(encoding="utf-8")
+    css = (REPO_ROOT / "showcase" / "styles.css").read_text(encoding="utf-8")
+
+    assert 'class="eyebrow"' not in html
+    assert 'class="page-grid"' not in html
+    assert "Bahnschrift" not in css
+    assert "DIN Alternate" not in css
+    assert "mask-image" not in css
+    assert "01 / Localization trap" not in html
+    assert "02 / Sanity failure" not in html
+    assert "03 / Negative result" not in html
+
+
 def test_build_showcase_exports_only_the_public_allowlist(tmp_path: Path) -> None:
     output = tmp_path / "public"
 

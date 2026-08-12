@@ -9,7 +9,6 @@
   --vx-coral: #ff785f;
   --vx-lime: #a7e33f;
   --vx-focus: #f7c95c;
-  --vx-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
 }
 
 html,
@@ -45,13 +44,12 @@ body {
   border: 1px solid var(--vx-line);
   border-radius: 18px;
   background: var(--vx-panel);
-  box-shadow: var(--vx-shadow);
 }
 
 .vx-hero h1 {
   margin: 0 0 10px;
   color: var(--vx-text);
-  font-family: "Bahnschrift", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif;
   font-size: clamp(2.7rem, 6vw, 5.4rem);
   font-weight: 700;
   line-height: 0.98;
@@ -113,16 +111,22 @@ body {
 .vx-findings {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 0;
+  overflow: hidden;
   margin: 12px 0;
+  border: 1px solid var(--vx-line);
+  border-radius: 16px;
+  background: var(--vx-panel);
 }
 
 .vx-findings article {
   min-height: 210px;
   padding: 22px;
-  border: 1px solid var(--vx-line);
-  border-radius: 16px;
-  background: var(--vx-panel);
+  border-right: 1px solid var(--vx-line);
+}
+
+.vx-findings article:last-child {
+  border-right: 0;
 }
 
 .vx-findings article:nth-child(2) strong {
@@ -137,7 +141,7 @@ body {
   display: block;
   margin-bottom: 16px;
   color: var(--vx-cyan);
-  font-family: "Bahnschrift", "Cascadia Code", monospace;
+  font-family: "Cascadia Code", Consolas, monospace;
   font-size: clamp(2.2rem, 5vw, 4.4rem);
   line-height: 0.95;
   letter-spacing: -0.035em;
@@ -407,6 +411,12 @@ body {
 
   .vx-findings article {
     min-height: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--vx-line);
+  }
+
+  .vx-findings article:last-child {
+    border-bottom: 0;
   }
 
   .vx-figure-grid > div {

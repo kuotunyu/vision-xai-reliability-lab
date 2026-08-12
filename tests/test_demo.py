@@ -97,3 +97,13 @@ def test_gradio_analytics_explicit_setting_is_preserved(monkeypatch: pytest.Monk
     configure_gradio_environment()
 
     assert os.environ["GRADIO_ANALYTICS_ENABLED"] == "True"
+
+
+def test_demo_css_uses_one_readable_sans_voice_and_a_continuous_findings_band() -> None:
+    css = (REPO_ROOT / "app" / "demo.css").read_text(encoding="utf-8")
+
+    assert "Bahnschrift" not in css
+    assert "--vx-shadow" not in css
+    assert ".vx-findings {" in css
+    assert "overflow: hidden;" in css
+    assert "border-right: 1px solid var(--vx-line);" in css
