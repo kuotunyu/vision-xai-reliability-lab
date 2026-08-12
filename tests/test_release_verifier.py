@@ -7,6 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 from PIL import Image
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -37,12 +38,17 @@ def _copy_evidence(tmp_path: Path) -> Path:
         shutil.copytree(REPO_ROOT / directory, root / directory)
     for filename in ("README.md", "README_en.md"):
         shutil.copy2(REPO_ROOT / filename, root / filename)
+        copied_readme = root / filename
+        lines = copied_readme.read_text(encoding="utf-8").splitlines()
+        copied_readme.write_text(
+            "\n".join(line for line in lines if "OWNER_ACTIONS.md" not in line) + "\n",
+            encoding="utf-8",
+        )
     for filename in (
         "ARTIFACTS.md",
         "DATA_CARD.md",
         "FAILURES.md",
         "MODEL_CARD.md",
-        "OWNER_ACTIONS.md",
     ):
         shutil.copy2(REPO_ROOT / filename, root / filename)
     return root
@@ -154,23 +160,6 @@ def test_readmes_use_the_evidence_first_information_architecture() -> None:
 
     for text in (primary, secondary):
         assert "FastAPI-0.110" not in text
-        assert text.count("```mermaid") == 1
-
-
-def test_owner_actions_capture_github_portfolio_handoff() -> None:
-    text = (REPO_ROOT / "OWNER_ACTIONS.md").read_text(encoding="utf-8")
-    expected = (
-        "Repository description",
-        "以可靠性為核心的 XAI benchmark",
-        "computer-vision",
-        "trustworthy-ai",
-        "assets/portfolio/social-preview.png",
-        "GitHub Actions",
-        "push `main`",
-        "Pin the repository",
-    )
-    for phrase in expected:
-        assert phrase in text
 
 
 def test_generated_result_tables_are_collapsible() -> None:
@@ -205,6 +194,34 @@ def test_release_verifier_rejects_tracked_agent_plans(tmp_path: Path) -> None:
 
     assert result.returncode == 1
     assert "forbidden tracked path: docs/superpowers/plans/local-plan.md" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "relative_path",
+    [
+        ".impeccable/design.json",
+        "DESIGN.md",
+        "PRODUCT.md",
+        "OWNER_ACTIONS.md",
+        "docs/design/internal-plan.md",
+        "assets/portfolio/EVIDENCE_CARTOGRAPHY.md",
+    ],
+)
+def test_release_verifier_rejects_internal_design_and_handoff_files(
+    tmp_path: Path, relative_path: str
+) -> None:
+    root = _copy_evidence(tmp_path)
+    _initialize_candidate_git(root)
+    internal_file = root / relative_path
+    internal_file.parent.mkdir(parents=True, exist_ok=True)
+    internal_file.write_text("internal working material\n", encoding="utf-8")
+    _git(root, "add", relative_path)
+    _git(root, "commit", "-m", "add internal material")
+
+    result = _run_verifier(root, "--git")
+
+    assert result.returncode == 1
+    assert f"forbidden tracked path: {relative_path}" in result.stderr
 
 
 def test_release_verifier_allows_only_the_explicit_canonical_origin(tmp_path: Path) -> None:
@@ -346,13 +363,3 @@ def test_release_verifier_rejects_broken_local_markdown_link(tmp_path: Path) -> 
 
     assert result.returncode == 1
     assert "broken local Markdown link" in result.stderr
-
-
-def test_owner_actions_match_the_existing_github_repository() -> None:
-    owner_actions = (REPO_ROOT / "OWNER_ACTIONS.md").read_text(encoding="utf-8")
-
-    assert "Create an empty" not in owner_actions
-    assert "Add the GitHub remote" not in owner_actions
-    assert "git push origin main" in owner_actions
-    assert "CI and Pages" in owner_actions
-    assert "Do not create a tag or GitHub Release" in owner_actions

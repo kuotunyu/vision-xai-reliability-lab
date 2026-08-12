@@ -196,7 +196,6 @@ tools/              發布前審計驗證與 CUDA Canary 驗證工具
 - [MODEL_CARD.md](MODEL_CARD.md)：模型架構、訓練超參數與評測範圍。
 - [ARTIFACTS.md](ARTIFACTS.md)：不可變公開產物與 SHA-256 驗證清單。
 - [FAILURES.md](FAILURES.md)：負結果分析與失敗歸因。
-- [OWNER_ACTIONS.md](OWNER_ACTIONS.md)：維護者操作指引與驗證流程。
 
 ---
 

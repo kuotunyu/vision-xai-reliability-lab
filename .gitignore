@@ -12,7 +12,9 @@ __pycache__/
 .coverage
 htmlcov/
 .artifacts/
+.impeccable/
 docs/superpowers/
+docs/design/
 .superpowers/
 dist/
 build/
@@ -40,9 +42,13 @@ results/derived/*
 .agents/
 .claude/
 CLAUDE.md
+DESIGN.md
+OWNER_ACTIONS.md
 PLAN.md
+PRODUCT.md
 PROGRESS.md
 PROJECT_PLAN.md
+assets/portfolio/EVIDENCE_CARTOGRAPHY.md
 interview*.md
 INTERVIEW_PREP.md
 *.private.md

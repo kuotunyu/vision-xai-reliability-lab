@@ -26,6 +26,7 @@ MAX_TRACKED_FILE_BYTES = 1024 * 1024
 GIT_LOG_FIELD_COUNT = 4
 EXPECTED_GIT_IDENTITY = "kuotunyu <61350295+kuotunyu@users.noreply.github.com>"
 FORBIDDEN_ROOT_NAMES = {
+    ".impeccable",
     ".mypy_cache",
     ".pytest_cache",
     ".ruff_cache",
@@ -34,8 +35,15 @@ FORBIDDEN_ROOT_NAMES = {
     "data",
     "notebooks",
 }
-FORBIDDEN_EXACT_PATHS = {"PROGRESS.md", "RELEASE_AUDIT.md"}
-FORBIDDEN_PATH_PREFIXES = ("docs/superpowers/",)
+FORBIDDEN_EXACT_PATHS = {
+    "DESIGN.md",
+    "OWNER_ACTIONS.md",
+    "PRODUCT.md",
+    "PROGRESS.md",
+    "RELEASE_AUDIT.md",
+    "assets/portfolio/EVIDENCE_CARTOGRAPHY.md",
+}
+FORBIDDEN_PATH_PREFIXES = ("docs/design/", "docs/superpowers/")
 FORBIDDEN_WEIGHT_SUFFIXES = {".ckpt", ".pt", ".pth"}
 ALLOWED_RAW_RESULTS = {
     "results/raw/data_prepare/full/fingerprint.json",

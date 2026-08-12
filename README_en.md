@@ -196,7 +196,6 @@ tools/              Release verification and CUDA resume canary auditing tools
 - [MODEL_CARD.md](MODEL_CARD.md): Architecture specifications and evaluation scopes.
 - [ARTIFACTS.md](ARTIFACTS.md): Immutable release artifacts and SHA-256 checksums.
 - [FAILURES.md](FAILURES.md): Negative results and failure analysis.
-- [OWNER_ACTIONS.md](OWNER_ACTIONS.md): Maintainer action guides and release verification.
 
 ---
 
