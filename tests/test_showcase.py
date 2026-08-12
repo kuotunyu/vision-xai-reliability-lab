@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -190,3 +191,19 @@ def test_primary_ci_builds_showcase_without_deployment() -> None:
     assert not any(
         step.get("uses", "").startswith("actions/deploy-pages@") for step in quality_steps
     )
+
+
+def test_workflows_pin_setup_uv_to_resolvable_immutable_commit() -> None:
+    for filename in ("ci.yml", "pages.yml"):
+        workflow = yaml.safe_load(
+            (REPO_ROOT / ".github" / "workflows" / filename).read_text(encoding="utf-8")
+        )
+        setup_refs = [
+            step["uses"].partition("@")[2]
+            for job in workflow["jobs"].values()
+            for step in job.get("steps", [])
+            if step.get("uses", "").startswith("astral-sh/setup-uv@")
+        ]
+
+        assert len(setup_refs) == 1
+        assert re.fullmatch(r"[0-9a-f]{40}", setup_refs[0])

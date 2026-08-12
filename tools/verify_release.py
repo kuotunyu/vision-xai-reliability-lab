@@ -259,11 +259,37 @@ def _tracked_paths(root: Path) -> list[str]:
     return [path for path in _git(root, "ls-files", "-z").split("\0") if path]
 
 
-def verify_git_identity_and_history(root: Path, *, allow_dirty: bool) -> None:
+def _normalized_remote_url(url: str) -> str:
+    normalized = url.strip().rstrip("/")
+    return normalized[:-4] if normalized.endswith(".git") else normalized
+
+
+def _verify_remote_boundary(root: Path, *, allowed_origin: str | None) -> None:
+    remotes = [name for name in _git(root, "remote").splitlines() if name]
+    if not remotes:
+        return
+    if allowed_origin is None:
+        raise VerificationError("release candidate must not have a Git remote")
+    if remotes != ["origin"]:
+        raise VerificationError("release candidate has unexpected Git remotes")
+    expected = _normalized_remote_url(allowed_origin)
+    fetch_urls = _git(root, "remote", "get-url", "--all", "origin").splitlines()
+    push_urls = _git(root, "remote", "get-url", "--push", "--all", "origin").splitlines()
+    if not expected or any(
+        _normalized_remote_url(url) != expected for url in fetch_urls + push_urls
+    ):
+        raise VerificationError("release candidate has unexpected Git remote URL")
+
+
+def verify_git_identity_and_history(
+    root: Path,
+    *,
+    allow_dirty: bool,
+    allowed_origin: str | None,
+) -> None:
     if _git(root, "branch", "--show-current").strip() != "main":
         raise VerificationError("release candidate must be on branch main")
-    if _git(root, "remote").strip():
-        raise VerificationError("release candidate must not have a Git remote")
+    _verify_remote_boundary(root, allowed_origin=allowed_origin)
     if _git(root, "tag", "--list").strip():
         raise VerificationError("release candidate must not have tags")
     if not allow_dirty and _git(root, "status", "--porcelain=v1").strip():
@@ -363,7 +389,13 @@ def verify_markdown_links(root: Path) -> int:
     return checked
 
 
-def verify(root: Path, *, git: bool = False, allow_dirty: bool = False) -> list[str]:
+def verify(
+    root: Path,
+    *,
+    git: bool = False,
+    allow_dirty: bool = False,
+    allowed_origin: str | None = None,
+) -> list[str]:
     root = root.resolve()
     artifact_count = verify_artifact_hashes(root)
     summary = verify_summary_schema(root)
@@ -378,7 +410,11 @@ def verify(root: Path, *, git: bool = False, allow_dirty: bool = False) -> list[
         "PASS CUDA resume canary evidence",
     ]
     if git:
-        verify_git_identity_and_history(root, allow_dirty=allow_dirty)
+        verify_git_identity_and_history(
+            root,
+            allow_dirty=allow_dirty,
+            allowed_origin=allowed_origin,
+        )
         tracked_count = verify_privacy_and_tracked_boundary(root)
         link_count = verify_markdown_links(root)
         checks.extend(
@@ -400,9 +436,18 @@ def main() -> int:
         action="store_true",
         help="permit a dirty tree during development (final release checks must omit this)",
     )
+    parser.add_argument(
+        "--allow-origin",
+        help="permit exactly one origin remote when its URL matches this value",
+    )
     args = parser.parse_args()
     try:
-        checks = verify(args.root, git=args.git, allow_dirty=args.allow_dirty)
+        checks = verify(
+            args.root,
+            git=args.git,
+            allow_dirty=args.allow_dirty,
+            allowed_origin=args.allow_origin,
+        )
     except VerificationError as exc:
         sys.stderr.write(f"FAIL {exc}\n")
         return 1

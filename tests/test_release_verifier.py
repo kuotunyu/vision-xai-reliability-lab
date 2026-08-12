@@ -149,6 +149,23 @@ def test_release_verifier_accepts_clean_candidate_repository(tmp_path: Path) -> 
     assert "Markdown local links" in result.stdout
 
 
+def test_release_verifier_allows_only_the_explicit_canonical_origin(tmp_path: Path) -> None:
+    root = _copy_evidence(tmp_path)
+    _initialize_candidate_git(root)
+    canonical = "https://github.com/kuotunyu/vision-xai-reliability-lab.git"
+    _git(root, "remote", "add", "origin", canonical)
+
+    accepted = _run_verifier(root, "--git", "--allow-origin", canonical)
+
+    assert accepted.returncode == 0, accepted.stdout + accepted.stderr
+
+    _git(root, "remote", "set-url", "origin", "https://github.com/example/fork.git")
+    rejected = _run_verifier(root, "--git", "--allow-origin", canonical)
+
+    assert rejected.returncode == 1
+    assert "unexpected Git remote URL" in rejected.stderr
+
+
 def test_release_verifier_rejects_tampered_artifact(tmp_path: Path) -> None:
     root = _copy_evidence(tmp_path)
     summary_path = root / "results" / "derived" / "summary.json"
