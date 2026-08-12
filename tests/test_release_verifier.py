@@ -33,7 +33,7 @@ def _copy_evidence(tmp_path: Path) -> Path:
     root.mkdir()
     for directory in ("assets", "release", "results", "schemas", "showcase"):
         shutil.copytree(REPO_ROOT / directory, root / directory)
-    for filename in ("README.md", "README_zh-TW.md"):
+    for filename in ("README.md", "README_en.md"):
         shutil.copy2(REPO_ROOT / filename, root / filename)
     for filename in (
         "ARTIFACTS.md",
@@ -95,7 +95,7 @@ def test_release_manifest_covers_portfolio_visuals() -> None:
 
 
 def test_readmes_lead_with_portfolio_evidence() -> None:
-    headings = {"README.md": "## Project status", "README_zh-TW.md": "## 專案進度"}
+    headings = {"README.md": "## 專案進度", "README_en.md": "## Project status"}
     for filename, status_heading in headings.items():
         text = (REPO_ROOT / filename).read_text(encoding="utf-8")
         assert "![Vision XAI reliability evidence](assets/portfolio/hero.png)" in text
@@ -104,11 +104,17 @@ def test_readmes_lead_with_portfolio_evidence() -> None:
         assert "kuotunyu.github.io/vision-xai-reliability-lab/" in text
         assert "(showcase/)" in text
 
+    primary = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    english = (REPO_ROOT / "README_en.md").read_text(encoding="utf-8")
+    assert "[English version](README_en.md)" in primary
+    assert "[正體中文](README.md)" in english
+
 
 def test_owner_actions_capture_github_portfolio_handoff() -> None:
     text = (REPO_ROOT / "OWNER_ACTIONS.md").read_text(encoding="utf-8")
     expected = (
         "Repository description",
+        "以可靠性為核心的 XAI benchmark",
         "computer-vision",
         "trustworthy-ai",
         "assets/portfolio/social-preview.png",
@@ -121,7 +127,7 @@ def test_owner_actions_capture_github_portfolio_handoff() -> None:
 
 
 def test_generated_result_tables_are_collapsible() -> None:
-    for filename in ("README.md", "README_zh-TW.md"):
+    for filename in ("README.md", "README_en.md"):
         text = (REPO_ROOT / filename).read_text(encoding="utf-8")
         details_start = text.rfind("<details>", 0, text.index(RESULTS_BEGIN))
         assert details_start >= 0

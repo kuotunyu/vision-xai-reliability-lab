@@ -10,9 +10,9 @@ reviewing the final local commit.
    `vision-xai-reliability-lab`. Do not initialize it with another README,
    license, or `.gitignore`.
 2. Configure the repository **About** panel:
-   - Repository description: `Reliability-first XAI benchmark for ConvNeXt and
-     ViT: localization baselines, faithfulness, sanity checks, and reproducible
-     CUDA resume evidence.`
+   - Repository description: `以可靠性為核心的 XAI benchmark：比較 ConvNeXt 與
+     ViT 的 localization、faithfulness、sanity checks 與可重現 CUDA resume
+     證據。`
    - Topics: `computer-vision`, `explainable-ai`, `trustworthy-ai`, `pytorch`,
      `machine-learning`, `model-evaluation`, `reproducibility`, `fastapi`, and
      `gradio`.

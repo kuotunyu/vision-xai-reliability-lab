@@ -25,7 +25,12 @@ def _write_wheel(path: Path, extra: dict[str, bytes] | None = None) -> None:
             archive.writestr(name, payload)
 
 
-def _write_sdist(path: Path, extra: dict[str, bytes] | None = None) -> None:
+def _write_sdist(
+    path: Path,
+    extra: dict[str, bytes] | None = None,
+    *,
+    include_english_readme: bool = True,
+) -> None:
     members = {
         "vision_xai-0.1.0/pyproject.toml": b"[project]\nname = 'vision-xai'\n",
         "vision_xai-0.1.0/LICENSE": b"MIT\n",
@@ -37,6 +42,8 @@ def _write_sdist(path: Path, extra: dict[str, bytes] | None = None) -> None:
         "vision_xai-0.1.0/schemas/cuda-resume-canary.schema.json": b"{}\n",
         "vision_xai-0.1.0/schemas/full-summary.schema.json": b"{}\n",
     }
+    if include_english_readme:
+        members["vision_xai-0.1.0/README_en.md"] = b"# English release\n"
     members.update(extra or {})
     with tarfile.open(path, "w:gz") as archive:
         for name, payload in members.items():
@@ -73,6 +80,18 @@ def test_distribution_audit_accepts_minimal_public_archives(tmp_path: Path) -> N
     assert result.returncode == 0, result.stdout + result.stderr
     assert "PASS wheel boundary" in result.stdout
     assert "PASS sdist boundary" in result.stdout
+
+
+def test_distribution_audit_requires_complete_bilingual_readmes(tmp_path: Path) -> None:
+    wheel = tmp_path / "vision_xai-0.1.0-py3-none-any.whl"
+    sdist = tmp_path / "vision_xai-0.1.0.tar.gz"
+    _write_wheel(wheel)
+    _write_sdist(sdist, include_english_readme=False)
+
+    result = _run(wheel, sdist)
+
+    assert result.returncode == 1
+    assert "README_en.md" in result.stderr
 
 
 def test_distribution_audit_rejects_archive_traversal(tmp_path: Path) -> None:

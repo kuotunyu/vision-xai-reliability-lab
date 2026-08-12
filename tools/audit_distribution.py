@@ -189,6 +189,7 @@ def audit_sdist(path: Path) -> int:
     required = {
         "LICENSE",
         "README.md",
+        "README_en.md",
         "pyproject.toml",
         "src/vision_xai/__init__.py",
         "release/artifact-manifest.json",

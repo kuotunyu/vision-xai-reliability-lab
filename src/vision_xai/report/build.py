@@ -364,7 +364,7 @@ def build_report(
     resolved_readmes = list(
         readme_paths
         if readme_paths is not None
-        else ((Path("README.md"), Path("README_zh-TW.md")) if publish else ())
+        else ((Path("README.md"), Path("README_en.md")) if publish else ())
     )
     updated: list[Path] = []
     for readme in resolved_readmes:

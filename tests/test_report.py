@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+import vision_xai.report.build as report_build
 from conftest import ConfigFactory
 from vision_xai.config import AppConfig
 from vision_xai.data.prepare import prepare_data
@@ -145,14 +146,46 @@ def test_non_full_report_cannot_modify_public_readmes_or_assets(
     monkeypatch.chdir(tmp_path)
     sentinel = f"# public\n{RESULTS_BEGIN}\nDO NOT REPLACE\n{RESULTS_END}\n"
     Path("README.md").write_text(sentinel, encoding="utf-8")
-    Path("README_zh-TW.md").write_text(sentinel, encoding="utf-8")
+    Path("README_en.md").write_text(sentinel, encoding="utf-8")
 
     result = build_report(evaluated_config)
 
     assert result.readmes_updated == []
     assert Path("README.md").read_text(encoding="utf-8") == sentinel
-    assert Path("README_zh-TW.md").read_text(encoding="utf-8") == sentinel
+    assert Path("README_en.md").read_text(encoding="utf-8") == sentinel
     assert not Path("assets").exists()
+
+
+def test_full_publish_updates_primary_and_english_readmes(
+    synthetic_data_dir: Path,
+    config_factory: ConfigFactory,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    cfg = config_factory(synthetic_data_dir, top_level={"experiment_name": "full"})
+    monkeypatch.chdir(tmp_path)
+    sentinel = f"# public\n{RESULTS_BEGIN}\nOLD\n{RESULTS_END}\n"
+    Path("README.md").write_text(sentinel, encoding="utf-8")
+    Path("README_en.md").write_text(sentinel, encoding="utf-8")
+    summary = {
+        "experiment": "full",
+        "generated_at": "2026-08-12T00:00:00+00:00",
+        "scale_note": "full-scale fixture",
+        "train": {},
+        "localization": {},
+        "faithfulness": {},
+        "randomization": {},
+        "consistency": {},
+        "spurious": {},
+    }
+    monkeypatch.setattr(report_build, "build_summary", lambda _: summary)
+    monkeypatch.setattr(report_build, "build_figures", lambda *_: [])
+
+    result = build_report(cfg, publish=True)
+
+    assert result.readmes_updated == [Path("README.md"), Path("README_en.md")]
+    for filename in ("README.md", "README_en.md"):
+        assert "**Experiment `full`**" in Path(filename).read_text(encoding="utf-8")
 
 
 def test_non_full_report_rejects_public_artifact_update(evaluated_config: AppConfig) -> None:

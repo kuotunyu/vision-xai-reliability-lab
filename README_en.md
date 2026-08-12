@@ -5,7 +5,7 @@ can still fail.** ConvNeXt-Tiny and ViT-B/16 are evaluated on Oxford-IIIT Pet
 with localization, causal faithfulness, model-randomization sanity checks,
 stability, and a deliberately falsifiable spurious-cue experiment.
 
-[繁體中文 → README_zh-TW.md](README_zh-TW.md)
+[正體中文](README.md)
 
 ![Vision XAI reliability evidence](assets/portfolio/hero.png)
 

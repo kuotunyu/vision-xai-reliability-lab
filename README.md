@@ -1,11 +1,11 @@
-# vision-xai-reliability-lab（繁體中文）
+# vision-xai-reliability-lab
 
 **一個以可靠性為優先的 XAI benchmark，實際驗證「看起來合理」的
 heatmap 為什麼仍可能失敗。** 本專案比較 ConvNeXt-Tiny 與 ViT-B/16，
 並分開測量 localization、causal faithfulness、model randomization、
 stability 與 spurious cue。
 
-[English README → README.md](README.md)
+[English version](README_en.md)
 
 ![Vision XAI reliability evidence](assets/portfolio/hero.png)
 

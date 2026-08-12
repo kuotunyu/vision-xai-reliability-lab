@@ -69,9 +69,9 @@ def test_readme_language_contract() -> None:
     zh = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
     en = (REPO_ROOT / "README_en.md").read_text(encoding="utf-8")
     assert "## 這次實驗真正發現了什麼" in zh
-    assert "[English version](README_en.md)" in zh
+    assert "English version" in zh and "README_en.md" in zh
     assert "## What this experiment found" in en
-    assert "[正體中文](README.md)" in en
+    assert "正體中文" in en and "README.md" in en
     assert not (REPO_ROOT / "README_zh-TW.md").exists()
 ```
 
@@ -97,8 +97,8 @@ git mv README.md README_en.md
 git mv README_zh-TW.md README.md
 ```
 
-以 patch 將中文主版入口設為 `[English version](README_en.md)`，英文副版設為
-`[正體中文](README.md)`；保留兩份 generated result markers 與區塊內容逐 byte
+以 patch 將中文主版入口設為「English version → README_en.md」，英文副版設為
+「正體中文 → README.md」；保留兩份 generated result markers 與區塊內容逐 byte
 一致。
 
 - [ ] **Step 4: 更新 report、verifier、distribution 與 About handoff**

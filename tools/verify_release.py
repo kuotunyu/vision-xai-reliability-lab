@@ -204,7 +204,7 @@ def _result_block(path: Path) -> str:
 
 def verify_readme_synchronization(root: Path) -> None:
     generated = (root / "results" / "derived" / "summary.md").read_text(encoding="utf-8").strip()
-    for name in ("README.md", "README_zh-TW.md"):
+    for name in ("README.md", "README_en.md"):
         if _result_block(root / name) != generated:
             raise VerificationError(f"{name} result block differs from summary.md")
 
