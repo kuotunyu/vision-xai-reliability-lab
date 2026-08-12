@@ -8,7 +8,7 @@ from PIL import Image
 from tools.portfolio_assets import (
     PortfolioAssetError,
     extract_portfolio_metrics,
-    render_portfolio_assets,
+    render_social_preview,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -36,15 +36,19 @@ def test_extract_portfolio_metrics_rejects_non_full_summary() -> None:
         extract_portfolio_metrics({"schema_version": 1, "experiment": "smoke"})
 
 
-def test_render_portfolio_assets_writes_expected_pngs(tmp_path: Path) -> None:
-    hero, social = render_portfolio_assets(REPO_ROOT, tmp_path)
+def test_render_social_preview_does_not_overwrite_readme_hero(tmp_path: Path) -> None:
+    hero = tmp_path / "hero.png"
+    hero.write_bytes(b"browser capture")
 
-    assert Image.open(hero).size == (1600, 900)
-    assert Image.open(social).size == (1280, 640)
-    assert hero.stat().st_size < 1024 * 1024
+    social = render_social_preview(REPO_ROOT, tmp_path)
+
+    assert social == tmp_path / "social-preview.png"
+    assert hero.read_bytes() == b"browser capture"
+    with Image.open(social) as image:
+        assert image.size == (1280, 640)
     assert social.stat().st_size < 1024 * 1024
 
 
 def test_renderer_refuses_to_write_into_canonical_results() -> None:
     with pytest.raises(PortfolioAssetError, match="protected evidence tree"):
-        render_portfolio_assets(REPO_ROOT, REPO_ROOT / "results" / "portfolio")
+        render_social_preview(REPO_ROOT, REPO_ROOT / "results" / "portfolio")

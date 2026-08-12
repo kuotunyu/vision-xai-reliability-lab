@@ -1,4 +1,4 @@
-"""Generate portfolio visuals from the canonical full-scale aggregate."""
+"""Generate the social preview from the canonical full-scale aggregate."""
 
 from __future__ import annotations
 
@@ -106,103 +106,11 @@ def _font(size: int, *, bold: bool = False, mono: bool = False) -> ImageFont.Fre
     return ImageFont.truetype(font_manager.findfont(properties), size=size)
 
 
-def _metric_card(
-    draw: ImageDraw.ImageDraw,
-    box: tuple[int, int, int, int],
-    *,
-    index: str,
-    value: str,
-    title: str,
-    detail: tuple[str, ...],
-    accent: str,
-) -> None:
-    left, top, right, bottom = box
-    draw.rounded_rectangle(box, radius=22, fill=PANEL, outline=GRID, width=2)
-    draw.text((left + 28, top + 24), index, font=_font(17, mono=True), fill=accent)
-    draw.text((left + 28, top + 58), value, font=_font(62, bold=True), fill=IVORY)
-    draw.text((left + 28, top + 134), title, font=_font(21, bold=True), fill=accent)
-    y = top + 174
-    for line in detail:
-        draw.text((left + 28, y), line, font=_font(17), fill=MUTED)
-        y += 28
-    draw.line((left + 28, bottom - 26, right - 28, bottom - 26), fill=accent, width=3)
-
-
 def _draw_grid(draw: ImageDraw.ImageDraw, width: int, height: int, *, spacing: int) -> None:
     for x in range(0, width, spacing):
         draw.line((x, 0, x, height), fill=GRID, width=1)
     for y in range(0, height, spacing):
         draw.line((0, y, width, y), fill=GRID, width=1)
-
-
-def _render_hero(metrics: PortfolioMetrics) -> Image.Image:
-    image = Image.new("RGB", (1600, 900), INK)
-    draw = ImageDraw.Draw(image)
-    _draw_grid(draw, 1600, 900, spacing=80)
-    draw.rectangle((0, 0, 18, 900), fill=CYAN)
-    draw.text((74, 58), "TRUSTWORTHY VISION / FIELD NOTE 01", font=_font(17, mono=True), fill=CYAN)
-    draw.text((70, 102), "VISION XAI", font=_font(92, bold=True), fill=IVORY)
-    draw.text((72, 202), "RELIABILITY LAB", font=_font(48), fill=MUTED)
-    draw.text(
-        (73, 270),
-        "A heatmap can look right and still explain the wrong thing.",
-        font=_font(26),
-        fill=IVORY,
-    )
-    draw.line((74, 326, 1528, 326), fill=CYAN, width=3)
-
-    spurious_spread = max(
-        metrics.cnn_spurious_accuracy_spread, metrics.vit_spurious_accuracy_spread
-    )
-    _metric_card(
-        draw,
-        (72, 366, 558, 714),
-        index="01 / LOCALIZATION TRAP",
-        value=f"{metrics.center_pointing:.3f}",
-        title="CENTER PRIOR WINS",
-        detail=(
-            f"CNN best method  {metrics.cnn_best_attribution_pointing:.3f}",
-            f"ViT best method  {metrics.vit_best_attribution_pointing:.3f}",
-            "Location is not causality.",
-        ),
-        accent=CYAN,
-    )
-    _metric_card(
-        draw,
-        (572, 366, 1058, 714),
-        index="02 / SANITY CHECK",
-        value=f"{metrics.cnn_ig_randomization:.3f}",
-        title="IG RETAINS SIMILARITY",
-        detail=(
-            "after CNN head randomization",
-            f"ViT retains       {metrics.vit_ig_randomization:.3f}",
-            "Low was the healthy expectation.",
-        ),
-        accent=CORAL,
-    )
-    _metric_card(
-        draw,
-        (1072, 366, 1528, 714),
-        index="03 / NEGATIVE RESULT",
-        value=f"≤{spurious_spread:.3f}",
-        title="ACCURACY SPREAD",
-        detail=(
-            "across patch test variants",
-            "Shortcut was not learned.",
-            "Reported without spin.",
-        ),
-        accent=LIME,
-    )
-
-    draw.text((74, 776), "FULL L4 TRAINING", font=_font(18, bold=True), fill=IVORY)
-    draw.text(
-        (74, 811),
-        f"ATTRIBUTION METRICS · FIXED {metrics.attribution_subset}-SAMPLE TEST SUBSET",
-        font=_font(17, mono=True),
-        fill=MUTED,
-    )
-    draw.text((1236, 802), "LOCALIZATION ≠ CAUSALITY", font=_font(16, bold=True), fill=CYAN)
-    return image
 
 
 def _render_social(metrics: PortfolioMetrics) -> Image.Image:
@@ -252,8 +160,8 @@ def _render_social(metrics: PortfolioMetrics) -> Image.Image:
     return image
 
 
-def render_portfolio_assets(root: Path, output_dir: Path) -> tuple[Path, Path]:
-    """Render README and social-preview PNGs without touching evidence trees."""
+def render_social_preview(root: Path, output_dir: Path) -> Path:
+    """Render the social-preview PNG without touching protected evidence trees."""
     root = root.resolve()
     output_dir = output_dir.resolve()
     protected = tuple(
@@ -270,11 +178,9 @@ def render_portfolio_assets(root: Path, output_dir: Path) -> tuple[Path, Path]:
         raise PortfolioAssetError("canonical summary must be a JSON object")
     metrics = extract_portfolio_metrics(summary)
     output_dir.mkdir(parents=True, exist_ok=True)
-    hero = output_dir / "hero.png"
     social = output_dir / "social-preview.png"
-    _render_hero(metrics).save(hero, format="PNG", optimize=True, compress_level=9)
     _render_social(metrics).save(social, format="PNG", optimize=True, compress_level=9)
-    return hero, social
+    return social
 
 
 def main() -> int:
@@ -283,10 +189,10 @@ def main() -> int:
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
     try:
-        hero, social = render_portfolio_assets(args.root, args.output)
+        social = render_social_preview(args.root, args.output)
     except PortfolioAssetError as exc:
         parser.exit(1, f"FAIL {exc}\n")
-    sys.stdout.write(f"WROTE {hero}\nWROTE {social}\n")
+    sys.stdout.write(f"WROTE {social}\n")
     return 0
 
 
