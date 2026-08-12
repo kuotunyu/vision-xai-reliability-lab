@@ -24,6 +24,8 @@ jobs:
       # Tests use PIL-generated synthetic fixtures only — no dataset, no GPU.
       - run: uv run --no-sync pytest -m "not real_data" --cov=vision_xai --cov=app --cov-report=term
       - run: uv run --no-sync python tools/verify_release.py --root . --git
+      - run: uv run --no-sync python tools/build_showcase.py --root . --output .artifacts/showcase
+      - run: uv run --no-sync python tools/build_showcase.py --audit .artifacts/showcase
       - run: uv build --out-dir .artifacts/dist
       - name: Audit and smoke built distributions
         run: |

@@ -4,6 +4,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 import pytest
+import yaml
 from tools.build_showcase import ShowcaseError, audit_showcase, build_showcase
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -100,3 +101,35 @@ def test_build_showcase_exports_only_the_public_allowlist(tmp_path: Path) -> Non
     assert {"data/summary.json", "data/cuda-resume-canary.json"} <= names
     assert "assets/portfolio/hero.png" in names
     assert not any(name.endswith((".ckpt", ".npz", ".pt", ".pth")) for name in names)
+
+
+def test_pages_workflow_builds_then_deploys_without_project_secrets() -> None:
+    workflow_path = REPO_ROOT / ".github" / "workflows" / "pages.yml"
+    workflow = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
+    jobs = workflow["jobs"]
+
+    build_steps = jobs["build"]["steps"]
+    build_runs = "\n".join(step.get("run", "") for step in build_steps)
+    build_actions = {step.get("uses", "") for step in build_steps}
+    assert "tools/build_showcase.py" in build_runs
+    assert any(action.startswith("actions/upload-pages-artifact@") for action in build_actions)
+    assert jobs["build"]["permissions"] == {"contents": "read"}
+
+    deploy = jobs["deploy"]
+    assert deploy["permissions"] == {"pages": "write", "id-token": "write"}
+    assert "github.event_name == 'push'" in deploy["if"]
+    assert any(step.get("uses", "").startswith("actions/deploy-pages@") for step in deploy["steps"])
+    assert "secrets" not in workflow_path.read_text(encoding="utf-8")
+
+
+def test_primary_ci_builds_showcase_without_deployment() -> None:
+    workflow = yaml.safe_load(
+        (REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    )
+    quality_steps = workflow["jobs"]["quality"]["steps"]
+    commands = "\n".join(step.get("run", "") for step in quality_steps)
+
+    assert "tools/build_showcase.py" in commands
+    assert not any(
+        step.get("uses", "").startswith("actions/deploy-pages@") for step in quality_steps
+    )
