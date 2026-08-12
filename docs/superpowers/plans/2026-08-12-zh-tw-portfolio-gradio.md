@@ -161,7 +161,7 @@ def test_full_evidence_extracts_canonical_headlines() -> None:
     dashboard = load_evidence_dashboard(REPO_ROOT)
     assert dashboard.center_pointing == 0.922
     assert dashboard.attribution_samples == 500
-    assert dashboard.spurious_patch_energy_max == pytest.approx(0.012507)
+    assert dashboard.spurious_patch_energy_max == pytest.approx(0.012622)
     assert dashboard.model("cnn").best_pointing == 0.864
     assert dashboard.model("vit").best_pointing == 0.626
     assert dashboard.model("cnn").ig_randomization == pytest.approx(0.480816)

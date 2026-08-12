@@ -71,7 +71,7 @@ per-sample attribution arrays，在乾淨 release candidate 中只會產生空 d
 1. **研究定位與 scope**：大標題「Heatmap 經得起證據檢驗嗎？」；同列標示
    Google Colab NVIDIA L4、完整資料集訓練與固定 500-sample attribution subset。
 2. **三個核心結果**：`0.922 center prior`、約 `0.481 IG randomization`、
-   `≤0.012 spurious patch energy`。每張 card 只有一個數值、一個結論與一句限制。
+   `1.26% max spurious patch energy`。每張 card 只有一個數值、一個結論與一句限制。
 3. **Model family 比較**：ConvNeXt／ViT-B/16 單一 segmented control，切換後同步
    更新 accuracy、Macro-F1、best pointing、IG randomized similarity 與三張正式圖。
 4. **Metric boundary**：用一個緊湊提示框說明 localization、faithfulness 與 sanity
