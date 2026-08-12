@@ -31,7 +31,7 @@ def _run_verifier(root: Path, *extra_args: str) -> subprocess.CompletedProcess[s
 def _copy_evidence(tmp_path: Path) -> Path:
     root = tmp_path / "candidate"
     root.mkdir()
-    for directory in ("assets", "release", "results", "schemas"):
+    for directory in ("assets", "release", "results", "schemas", "showcase"):
         shutil.copytree(REPO_ROOT / directory, root / directory)
     for filename in ("README.md", "README_zh-TW.md"):
         shutil.copy2(REPO_ROOT / filename, root / filename)
