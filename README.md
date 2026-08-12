@@ -1,11 +1,11 @@
-# vision-xai-reliability-lab
+# vision-xai-reliability-lab（繁體中文）
 
-**A reliability-first XAI benchmark showing why visually plausible heatmaps
-can still fail.** ConvNeXt-Tiny and ViT-B/16 are evaluated on Oxford-IIIT Pet
-with localization, causal faithfulness, model-randomization sanity checks,
-stability, and a deliberately falsifiable spurious-cue experiment.
+**一個以可靠性為優先的 XAI benchmark，實際驗證「看起來合理」的
+heatmap 為什麼仍可能失敗。** 本專案比較 ConvNeXt-Tiny 與 ViT-B/16，
+並分開測量 localization、causal faithfulness、model randomization、
+stability 與 spurious cue。
 
-[繁體中文 → README_zh-TW.md](README_zh-TW.md)
+[English README → README.md](README.md)
 
 ![Vision XAI reliability evidence](assets/portfolio/hero.png)
 
@@ -14,61 +14,52 @@ stability, and a deliberately falsifiable spurious-cue experiment.
 ![PyTorch](https://img.shields.io/badge/PyTorch-CPU%20CI-EE4C2C?logo=pytorch&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2EA44F.svg)](LICENSE)
 
-> **A heatmap is not proof of causal reasoning.** This project measures where
-> attribution methods hold up, where they break, and whether the evidence can
-> be reproduced without quietly moving the goalposts.
+> **Heatmap 不是因果推理的證據。** 這裡不只展示 explanation，而是量測它們在哪裡
+> 成立、在哪裡失敗，並保護證據不被 smoke 或 CI 悄悄改寫。
 
-[→ Explore the results](https://kuotunyu.github.io/vision-xai-reliability-lab/)
-· [→ Reproduce locally](#quickstart)
-· [→ Audit the evidence](ARTIFACTS.md)
-· [→ Read the model card](MODEL_CARD.md)
+[→ 瀏覽結果](https://kuotunyu.github.io/vision-xai-reliability-lab/)
+· [→ 本機重現](#快速開始)
+· [→ 審核證據](ARTIFACTS.md)
+· [→ 閱讀 Model Card](MODEL_CARD.md)
 
-## What this experiment found
+## 這次實驗真正發現了什麼
 
-1. A fixed center prior reached **0.922 pointing-game accuracy** for both model
-   families, beating every evaluated attribution method. That exposes dataset
-   composition bias and is localization evidence, not causal faithfulness.
-2. Integrated Gradients **did not pass the model-randomization sanity
-   expectation**: its maps retained about 0.47–0.48 absolute Spearman
-   similarity after head randomization, substantially more than the other
-   evaluated methods. The expectation was qualitative (low is healthy); no
-   post-hoc numeric pass threshold is claimed.
-3. The spurious-patch experiment was a **negative result**. Under this
-   frozen-backbone, head-only regime, the models did not learn the intended
-   shortcut. This is not evidence that vision models generally resist
-   spurious cues.
+1. 固定 center prior 在兩種模型的 pointing game 都達到 **0.922**，
+   勝過所有實際 attribution method。這暴露了 dataset composition bias，
+   只是 localization 證據，不是 causal faithfulness。
+2. Integrated Gradients **未通過 model-randomization sanity expectation**：
+   head randomization 後仍保留約 0.47–0.48 的 absolute Spearman similarity，
+   明顯高於其他受測方法。預先的期待是「低才健康」，沒有事後自訂的數值門檻。
+3. Spurious-patch 實驗是**負結果**。在 frozen-backbone、head-only 訓練設定下，
+   模型沒有學到預期的 shortcut；這不能被解讀為 vision model 普遍抵抗 spurious cue。
 
-These are real full-scale results: all four classifier heads trained on the
-complete dataset on a Google Colab NVIDIA L4. Attribution-derived metrics use a
-fixed **500-sample subset** of the test split, not the complete test split. The
-immutable aggregate and provenance are documented in
-[ARTIFACTS.md](ARTIFACTS.md).
+這些數字來自真實的 **full-scale L4 run**：四個 classifier heads 以完整資料集訓練。
+Attribution-derived metrics 使用 test split 中固定的 **500 samples**，不是完整 test split。
+不可變的 aggregate 與來源紀錄見 [ARTIFACTS.md](ARTIFACTS.md)。
 
-The weight-free [static results showcase source](showcase/) turns those
-committed aggregates into a focused portfolio walkthrough. It loads no model,
-dataset, backend, analytics, or external JavaScript.
+不含 weights 的[靜態結果展示原始檔](showcase/)會把這些 committed aggregates
+整理成作品集導覽；它不載入模型、資料集、後端服務、analytics 或外部 JavaScript。
 
-## Project status
+## 專案進度
 
-| Stage | Scope | Status |
+| 階段 | 範圍 | 狀態 |
 |---|---|---|
-| 0 | Packaging, lint/type/test gates, Docker CPU path, CI | ✅ done |
-| 1 | Deterministic data pipeline, manifest, fingerprint, masks, resume | ✅ done |
-| 2 | Head-only training, CUDA AMP, checkpoints, `--resume` | ✅ done |
-| 3 | Grad-CAM, Integrated Gradients, Occlusion + three baselines | ✅ done |
-| 4 | Localization, faithfulness, sanity, stability, spurious-cue evaluation | ✅ done |
-| 5 | Machine-generated report and immutable public aggregates | ✅ done |
-| 6 | FastAPI + Gradio application, with lazy weight loading | ✅ done |
+| 0 | Packaging、lint/type/test gates、Docker CPU path、CI | ✅ 完成 |
+| 1 | 決定性資料管線、manifest、fingerprint、mask、resume | ✅ 完成 |
+| 2 | Head-only training、CUDA AMP、checkpoint、`--resume` | ✅ 完成 |
+| 3 | Grad-CAM、Integrated Gradients、Occlusion 與三個 baselines | ✅ 完成 |
+| 4 | Localization、faithfulness、sanity、stability、spurious-cue evaluation | ✅ 完成 |
+| 5 | Machine-generated report 與不可變公開 aggregates | ✅ 完成 |
+| 6 | FastAPI ＋ Gradio，weights 延遲載入 | ✅ 完成 |
 
-## Results (generated)
+## 實驗結果（自動產生）
 
-Everything between the markers below is generated from
-`results/derived/summary.json`; nothing is typed in by hand. Report generation
-does not modify public evidence by default. Only the canonical full experiment
-may opt in with `--update-public-artifacts` after review.
+以下標記之間的內容由 `results/derived/summary.json` 產生，不手填。
+Report 預設不會修改公開證據；只有 canonical full experiment 可在審查後以
+`--update-public-artifacts` 明確選擇更新。
 
 <details>
-<summary><strong>Full machine-generated result tables</strong></summary>
+<summary><strong>展開完整 machine-generated 結果表格</strong></summary>
 
 
 <!-- RESULTS:BEGIN -->
@@ -146,48 +137,31 @@ _A heatmap is not proof of causal reasoning._
 
 </details>
 
-## Quickstart
+## 快速開始
 
-Requires Python ≥ 3.11 and [uv](https://docs.astral.sh/uv/). All commands are
-identical in PowerShell and bash unless noted.
+需要 Python ≥ 3.11 與 [uv](https://docs.astral.sh/uv/)。除特別標註外，
+PowerShell 與 bash 指令相同。
 
 ```sh
-uv sync --frozen --no-editable                  # CPU-only torch, deterministic from uv.lock
+uv sync --frozen --no-editable                  # CPU-only torch，由 uv.lock 決定版本
 uv run --no-sync python -m vision_xai.cli self-check
-uv run --no-sync pytest -q                      # synthetic fixtures only, no dataset needed
+uv run --no-sync pytest -q                      # 只用合成 fixtures，不需下載 dataset
 ```
 
-The full pipeline (one-time ~800 MB dataset download from the official Oxford
-VGG server on the first step):
+準備 dataset（一次性下載約 800 MB，來源為牛津 VGG 官方伺服器）：
 
 ```sh
 uv run --no-sync python -m vision_xai.cli data prepare --config configs/smoke.yaml
-uv run --no-sync python -m vision_xai.cli train --model cnn --config configs/smoke.yaml
-uv run --no-sync python -m vision_xai.cli train --model vit --config configs/smoke.yaml
-uv run --no-sync python -m vision_xai.cli train --model cnn --patched --config configs/smoke.yaml
-uv run --no-sync python -m vision_xai.cli explain --model cnn --method gradcam --config configs/smoke.yaml
-uv run --no-sync python -m vision_xai.cli explain --model cnn --method integrated_gradients --config configs/smoke.yaml
-uv run --no-sync python -m vision_xai.cli explain --model vit --method integrated_gradients --config configs/smoke.yaml
-uv run --no-sync python -m vision_xai.cli evaluate --config configs/smoke.yaml
-uv run --no-sync python -m vision_xai.cli report --config configs/smoke.yaml
-uv run --no-sync python -m vision_xai.cli serve --config configs/smoke.yaml   # API + /demo UI
 ```
 
-The smoke report stays under `.artifacts/smoke/`. To regenerate the committed
-full block and figures from complete local raw outputs, use the explicit guard:
-
-```sh
-uv run --no-sync python -m vision_xai.cli report --config configs/full.yaml --update-public-artifacts
-```
-
-Long runs checkpoint every 32 samples and can be interrupted at any point:
+長任務每 32 筆存一次 checkpoint，可隨時中斷：
 
 ```sh
 uv run --no-sync python -m vision_xai.cli data prepare --config configs/full.yaml --max-items 200
 uv run --no-sync python -m vision_xai.cli data prepare --config configs/full.yaml --resume
 ```
 
-Override the dataset location without editing configs:
+不改 config 直接覆寫 dataset 位置：
 
 ```powershell
 # PowerShell
@@ -200,59 +174,55 @@ uv run --no-sync python -m vision_xai.cli data prepare --config configs/smoke.ya
 VISION_XAI_DATA_DIR=/mnt/d/datasets/pets uv run --no-sync python -m vision_xai.cli data prepare --config configs/smoke.yaml
 ```
 
-## Docker (CPU)
+## Docker（CPU）
 
 ```sh
 docker build -t vision-xai:dev .
-docker run --rm -p 8000:8000 vision-xai:dev     # serves the API on :8000
-docker compose up --build                        # + mounts checkpoints/results read-only
+docker run --rm -p 8000:8000 vision-xai:dev     # 在 :8000 提供 API 服務
+docker compose up --build                        # + 唯讀掛載 checkpoints/results
 ```
 
-The image is CPU-only by construction (torch resolves from the PyTorch CPU
-index via `uv.lock`) and contains no dataset, weights, or secrets. CI never
-requires a GPU.
+Image 依 `uv.lock` 從 PyTorch CPU index 安裝 torch，天生 CPU-only；不含
+dataset、model weights 或 secrets。CI 不需要 GPU。
 
-## GPU work
+## GPU 工作
 
-The committed full-scale evidence was produced on a **Google Colab NVIDIA L4**.
-CUDA is optional: local development, CI, the API health path, and all release
-gates except the explicitly labelled CUDA resume canary are CPU-safe.
+Commit 中的 full-scale 證據是在 **Google Colab NVIDIA L4** 產生。CUDA 並非一般開發需求：
+本機開發、CI、API health path 與除了明確標示之 CUDA resume canary 以外的 release gates
+皆可在 CPU 上執行。
 
-## Repository layout
+## 目錄結構
 
 ```
-configs/            smoke.yaml (tiny subset) and full.yaml
-src/vision_xai/     all logic: config, data pipeline, CLI
-  data/             source, splits, manifest, fingerprint, trimap, patches, transforms, datasets, prepare
-tests/              pytest suite on PIL-generated synthetic fixtures (never the real dataset)
-app/                FastAPI + Gradio (Stage 6)
-results/            immutable full aggregates and safe data-preparation summaries
+configs/            smoke.yaml（小子集）與 full.yaml
+src/vision_xai/     所有邏輯：config、資料管線、CLI
+  data/             source、splits、manifest、fingerprint、trimap、patches、transforms、datasets、prepare
+tests/              pytest（PIL 合成 fixtures，絕不使用真實 dataset）
+app/                FastAPI 與 Gradio（Stage 6）
+results/            不可變 full 聚合結果與安全的資料準備摘要
 schemas/            machine-readable artifact contracts
-tools/              local release and CUDA-canary verification
+tools/              本機 release 與 CUDA canary 驗證工具
 ```
 
-Key documents: [DATA_CARD.md](DATA_CARD.md) · [MODEL_CARD.md](MODEL_CARD.md) ·
+重要文件：[DATA_CARD.md](DATA_CARD.md) · [MODEL_CARD.md](MODEL_CARD.md) ·
 [ARTIFACTS.md](ARTIFACTS.md) · [FAILURES.md](FAILURES.md) ·
 [OWNER_ACTIONS.md](OWNER_ACTIONS.md)
 
-## Design notes (Stage 1)
+## 設計重點（Stage 1）
 
-- **Deterministic everywhere.** Train/val split is stratified per class with a
-  fixed seed; per-sample decisions (spurious-patch assignment) derive from
-  `sha256(seed, namespace, sample_id)` so they are independent of iteration
-  order, subsets, and platform.
-- **Manifest + fingerprint.** Every sample's image and trimap are sha256-hashed
-  into a JSONL manifest; the dataset fingerprint is order-independent, so a
-  resumed run is bit-identical to an uninterrupted one.
-- **Trimap semantics are verified, not assumed.** Official semantics
-  (1 = pet, 2 = background, 3 = boundary) are cross-checked empirically at
-  prepare time via a border-pixel heuristic.
-- **Spurious patch: assignments materialized, pixels on-the-fly.** Who gets the
-  patch is decided once and persisted for audit; the pixels are applied after
-  resize/crop so the patch bounding box is exact in model-input coordinates —
-  which the Stage-4 patch-attribution-energy metric requires.
+- **全面決定性。** train/val split 依 class 分層、seed 固定；per-sample 決策
+  （spurious patch 指派）由 `sha256(seed, namespace, sample_id)` 導出，與迭代
+  順序、子集選擇、平台無關。
+- **Manifest 與 fingerprint。** 每個樣本的 image 與 trimap 都以 sha256 寫入
+  JSONL manifest；dataset fingerprint 與處理順序無關，因此 resume 後的結果與
+  一次跑完完全一致。
+- **Trimap 語義驗證而非假設。** 官方語義（1 = pet、2 = background、3 =
+  boundary）在 prepare 時以邊界像素 heuristic 實測驗證。
+- **Spurious patch：指派落盤、像素即時套用。** 誰有 patch 在 prepare 時決定並
+  存檔可稽核；像素在 resize/crop 之後套用，patch 邊界框在 model-input 座標中
+  精確已知 — Stage 4 的 patch-attribution-energy 指標需要這一點。
 
-## Development
+## 開發
 
 ```sh
 uv run --no-sync ruff format --check .
@@ -261,7 +231,7 @@ uv run --no-sync mypy src tests app tools
 uv run --no-sync pytest -q
 ```
 
-## License
+## 授權
 
-[MIT](LICENSE). The Oxford-IIIT Pet dataset has its own license — see
-[DATA_CARD.md](DATA_CARD.md).
+[MIT](LICENSE)。Oxford-IIIT Pet dataset 另有其授權 — 見
+[DATA_CARD.md](DATA_CARD.md)。
