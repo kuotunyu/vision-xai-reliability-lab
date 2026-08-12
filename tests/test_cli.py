@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from click import unstyle
 from typer.testing import CliRunner
 
 from vision_xai.cli import app
@@ -16,13 +17,13 @@ runner = CliRunner()
 def test_root_help_exits_zero() -> None:
     result = runner.invoke(app, ["--help"])
     assert result.exit_code == 0
-    assert "data" in result.output
+    assert "data" in unstyle(result.output)
 
 
 def test_data_prepare_help_exits_zero() -> None:
     result = runner.invoke(app, ["data", "prepare", "--help"])
     assert result.exit_code == 0
-    assert "--resume" in result.output
+    assert "--resume" in unstyle(result.output)
 
 
 def test_self_check_passes_on_cpu() -> None:
@@ -44,7 +45,7 @@ def test_missing_required_config_option_exits_2(command: str) -> None:
 def test_serve_help_exits_zero_without_starting_a_server() -> None:
     result = runner.invoke(app, ["serve", "--help"])
     assert result.exit_code == 0
-    assert "--config" in result.output
+    assert "--config" in unstyle(result.output)
 
 
 def test_serve_missing_config_file_exits_1_without_starting_a_server() -> None:
