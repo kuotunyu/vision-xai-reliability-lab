@@ -22,7 +22,7 @@ Windows and Linux; binary figures are hashed byte-for-byte.
 
 ### README showcase capture
 
-`assets/portfolio/hero.png` is a 1440×900 browser capture of the allowlisted
+`assets/portfolio/showcase-demo-2026-08-12.png` is a 1440×900 browser capture of the allowlisted
 static showcase after both public JSON artifacts load. It is presentation-only,
 contains no input samples or model weights, and is protected by
 `release/artifact-manifest.json`.

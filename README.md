@@ -11,7 +11,7 @@
 
 [成果展示](https://kuotunyu.github.io/vision-xai-reliability-lab/) · [快速開始](#快速開始) · [實驗證據](ARTIFACTS.md) · [Model Card](MODEL_CARD.md) · [English](README_en.md)
 
-![Vision XAI reliability evidence](assets/portfolio/hero.png)
+![Vision XAI reliability evidence](assets/portfolio/showcase-demo-2026-08-12.png)
 
 > **Heatmap 不是因果推理的證據。** 本專案以統計指標檢驗解釋在哪裡成立、在哪裡失效，並以 SHA-256 manifest 防止 smoke test 或 CI 改寫正式結果。
 

@@ -18,7 +18,9 @@ SAFE_FILES = {
     "results/derived/summary.json": "data/summary.json",
     "release/cuda-resume-canary.json": "data/cuda-resume-canary.json",
     "release/artifact-manifest.json": "data/artifact-manifest.json",
-    "assets/portfolio/hero.png": "assets/portfolio/hero.png",
+    "assets/portfolio/showcase-demo-2026-08-12.png": (
+        "assets/portfolio/showcase-demo-2026-08-12.png"
+    ),
     "assets/portfolio/social-preview.png": "assets/portfolio/social-preview.png",
     "assets/figures/faithfulness_cnn.png": "assets/figures/faithfulness_cnn.png",
     "assets/figures/faithfulness_vit.png": "assets/figures/faithfulness_vit.png",

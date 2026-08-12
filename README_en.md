@@ -11,7 +11,7 @@ Its purpose is not to produce prettier heatmaps, but to test whether they depend
 
 [Results](https://kuotunyu.github.io/vision-xai-reliability-lab/) · [Quickstart](#quickstart) · [Evidence](ARTIFACTS.md) · [Model Card](MODEL_CARD.md) · [正體中文](README.md)
 
-![Vision XAI reliability evidence](assets/portfolio/hero.png)
+![Vision XAI reliability evidence](assets/portfolio/showcase-demo-2026-08-12.png)
 
 > **A heatmap is not proof of causal reasoning.** Statistical checks identify where explanations hold or fail, while a SHA-256 manifest prevents smoke tests or CI from rewriting formal results.
 

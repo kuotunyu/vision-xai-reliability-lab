@@ -96,19 +96,23 @@ def test_release_manifest_covers_portfolio_visuals() -> None:
     )
     paths = {entry["path"] for entry in manifest["artifacts"]}
 
-    assert "assets/portfolio/hero.png" in paths
+    assert "assets/portfolio/showcase-demo-2026-08-12.png" in paths
+    assert "assets/portfolio/hero.png" not in paths
     assert "assets/portfolio/social-preview.png" in paths
 
 
 def test_readme_hero_is_a_current_showcase_capture() -> None:
-    with Image.open(REPO_ROOT / "assets" / "portfolio" / "hero.png") as image:
+    capture_path = REPO_ROOT / "assets" / "portfolio" / "showcase-demo-2026-08-12.png"
+    with Image.open(capture_path) as image:
         assert image.size == (1440, 900)
 
     manifest = json.loads(
         (REPO_ROOT / "release" / "artifact-manifest.json").read_text(encoding="utf-8")
     )
     entry = next(
-        item for item in manifest["artifacts"] if item["path"] == "assets/portfolio/hero.png"
+        item
+        for item in manifest["artifacts"]
+        if item["path"] == "assets/portfolio/showcase-demo-2026-08-12.png"
     )
     assert entry["role"] == "browser capture of the allowlisted static showcase"
 
@@ -117,8 +121,10 @@ def test_readmes_lead_with_portfolio_evidence() -> None:
     headings = {"README.md": "## Release 狀態", "README_en.md": "## Release status"}
     for filename, status_heading in headings.items():
         text = (REPO_ROOT / filename).read_text(encoding="utf-8")
-        assert "![Vision XAI reliability evidence](assets/portfolio/hero.png)" in text
-        assert text.index("assets/portfolio/hero.png") < text.index(status_heading)
+        image_url = "assets/portfolio/showcase-demo-2026-08-12.png"
+        assert f"![Vision XAI reliability evidence]({image_url})" in text
+        assert "assets/portfolio/hero.png" not in text
+        assert text.index(image_url) < text.index(status_heading)
         assert "github.com/kuotunyu/vision-xai-reliability-lab/actions/workflows/ci.yml" in text
         assert "kuotunyu.github.io/vision-xai-reliability-lab/" in text
         assert "(showcase/)" in text

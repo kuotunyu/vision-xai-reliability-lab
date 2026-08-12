@@ -195,7 +195,8 @@ def test_build_showcase_exports_only_the_public_allowlist(tmp_path: Path) -> Non
     assert len(names) == 18
     assert {"index.html", "styles.css", "app.js"} <= names
     assert {"data/summary.json", "data/cuda-resume-canary.json"} <= names
-    assert "assets/portfolio/hero.png" in names
+    assert "assets/portfolio/showcase-demo-2026-08-12.png" in names
+    assert "assets/portfolio/hero.png" not in names
     assert not any(name.endswith((".ckpt", ".npz", ".pt", ".pth")) for name in names)
 
 
