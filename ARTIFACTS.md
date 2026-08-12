@@ -20,6 +20,13 @@ schemas, README synchronization, claim invariants, and repository boundary.
 Text artifact hashes use canonical LF bytes so the contract is identical on
 Windows and Linux; binary figures are hashed byte-for-byte.
 
+### README showcase capture
+
+`assets/portfolio/hero.png` is a 1440×900 browser capture of the allowlisted
+static showcase after both public JSON artifacts load. It is presentation-only,
+contains no input samples or model weights, and is protected by
+`release/artifact-manifest.json`.
+
 ## What the evidence supports
 
 - The center prior scores 0.922 on pointing game for both model families,

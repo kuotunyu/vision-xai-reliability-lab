@@ -7,6 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from PIL import Image
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RESULTS_BEGIN = "<!-- RESULTS:BEGIN -->"
 RESULTS_END = "<!-- RESULTS:END -->"
@@ -96,6 +98,19 @@ def test_release_manifest_covers_portfolio_visuals() -> None:
 
     assert "assets/portfolio/hero.png" in paths
     assert "assets/portfolio/social-preview.png" in paths
+
+
+def test_readme_hero_is_a_current_showcase_capture() -> None:
+    with Image.open(REPO_ROOT / "assets" / "portfolio" / "hero.png") as image:
+        assert image.size == (1440, 900)
+
+    manifest = json.loads(
+        (REPO_ROOT / "release" / "artifact-manifest.json").read_text(encoding="utf-8")
+    )
+    entry = next(
+        item for item in manifest["artifacts"] if item["path"] == "assets/portfolio/hero.png"
+    )
+    assert entry["role"] == "browser capture of the allowlisted static showcase"
 
 
 def test_readmes_lead_with_portfolio_evidence() -> None:

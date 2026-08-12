@@ -88,10 +88,10 @@
     },
     {
       "path": "assets/portfolio/hero.png",
-      "role": "portfolio visualization derived from full aggregate",
+      "role": "browser capture of the allowlisted static showcase",
       "hash_mode": "binary",
-      "bytes": 76746,
-      "sha256": "5208d1828393f14c34a1c658f8d8083a36fcefd2b2f24bdd7dd20a1f90f34bd1"
+      "bytes": 195064,
+      "sha256": "2b28b505b47e8433dbe7b24733fffcee15339b40063e007d0f43a6c177c6c65b"
     },
     {
       "path": "assets/portfolio/social-preview.png",
