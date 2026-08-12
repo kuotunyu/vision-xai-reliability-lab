@@ -1,75 +1,128 @@
 # vision-xai-reliability-lab
 
-**A reliability-first XAI benchmark showing why visually plausible heatmaps
-can still fail.** ConvNeXt-Tiny and ViT-B/16 are evaluated on Oxford-IIIT Pet
-with localization, causal faithfulness, model-randomization sanity checks,
-stability, and a deliberately falsifiable spurious-cue experiment.
+[![CI](https://github.com/kuotunyu/vision-xai-reliability-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/kuotunyu/vision-xai-reliability-lab/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?logo=pytorch&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688?logo=fastapi&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-2EA44F.svg)](LICENSE)
 
-[正體中文](README.md)
+**A reliability-first XAI benchmark showing why visually plausible heatmaps can still fail.** ConvNeXt-Tiny and ViT-B/16 are evaluated on Oxford-IIIT Pet across localization, causal faithfulness, model-randomization sanity checks, stability, and a deliberately falsifiable spurious-cue experiment.
+
+[正體中文](README.md) · [→ Explore the results](https://kuotunyu.github.io/vision-xai-reliability-lab/) · [→ Reproduce locally](#quickstart) · [→ Audit the evidence](ARTIFACTS.md) · [→ Read the model card](MODEL_CARD.md)
 
 ![Vision XAI reliability evidence](assets/portfolio/hero.png)
 
-[![CI](https://github.com/kuotunyu/vision-xai-reliability-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/kuotunyu/vision-xai-reliability-lab/actions/workflows/ci.yml)
-![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
-![PyTorch](https://img.shields.io/badge/PyTorch-CPU%20CI-EE4C2C?logo=pytorch&logoColor=white)
-[![License: MIT](https://img.shields.io/badge/License-MIT-2EA44F.svg)](LICENSE)
+> **A heatmap is not proof of causal reasoning.** This project measures where attribution methods hold up, where they break, and protects the empirical evidence from being altered by smoke tests or CI runs.
 
-> **A heatmap is not proof of causal reasoning.** This project measures where
-> attribution methods hold up, where they break, and whether the evidence can
-> be reproduced without quietly moving the goalposts.
+---
 
-[→ Explore the results](https://kuotunyu.github.io/vision-xai-reliability-lab/)
-· [→ Reproduce locally](#quickstart)
-· [→ Audit the evidence](ARTIFACTS.md)
-· [→ Read the model card](MODEL_CARD.md)
+## Key Findings & Methodological Insights
 
-## What this experiment found
+1. **Center Prior Exposure**:
+   A fixed center prior reached **0.922 pointing-game accuracy** for both model families, beating every evaluated attribution method. That exposes dataset composition bias and is localization evidence, not causal faithfulness.
+2. **Integrated Gradients Failed Model-Randomization Sanity Expectation**:
+   Its maps retained about 0.47–0.48 absolute Spearman similarity after head randomization, substantially higher than the other evaluated methods (healthy explanations should be sensitive to randomized weights).
+3. **Spurious-patch Experiment as a Negative Result**:
+   Under this frozen-backbone, head-only regime, the models did not learn the intended shortcut. This honest negative result is not evidence that vision models generally resist spurious cues.
 
-1. A fixed center prior reached **0.922 pointing-game accuracy** for both model
-   families, beating every evaluated attribution method. That exposes dataset
-   composition bias and is localization evidence, not causal faithfulness.
-2. Integrated Gradients **did not pass the model-randomization sanity
-   expectation**: its maps retained about 0.47–0.48 absolute Spearman
-   similarity after head randomization, substantially more than the other
-   evaluated methods. The expectation was qualitative (low is healthy); no
-   post-hoc numeric pass threshold is claimed.
-3. The spurious-patch experiment was a **negative result**. Under this
-   frozen-backbone, head-only regime, the models did not learn the intended
-   shortcut. This is not evidence that vision models generally resist
-   spurious cues.
+---
 
-These are real full-scale results: all four classifier heads trained on the
-complete dataset on a Google Colab NVIDIA L4. Attribution-derived metrics use a
-fixed **500-sample subset** of the test split, not the complete test split. The
-immutable aggregate and provenance are documented in
-[ARTIFACTS.md](ARTIFACTS.md).
+## System Architecture & Pipeline
 
-The weight-free [static results showcase source](showcase/) turns those
-committed aggregates into a focused portfolio walkthrough. It loads no model,
-dataset, backend, analytics, or external JavaScript.
+### 1. Multi-dimensional XAI Reliability Pipeline
 
-## Project status
+```mermaid
+%%{init: {'themeVariables': {'fontSize': '18px'}}}%%
+flowchart TD
+    subgraph DataStage ["Phase 1: Deterministic Data Engineering & Intervention"]
+        direction LR
+        Raw[("Oxford-IIIT Pet Dataset<br/>(37 pet categories)")] --> Trimap["Trimap Semantic Validation<br/>(Pet mask / background / border)"] --> Patch[("Spurious Corner Patch<br/>(Correlated cue injection)")] --> Manifest[("Deterministic Manifest<br/>(SHA-256 Dataset Fingerprint)")]
+    end
+
+    subgraph TrainStage ["Phase 2: Model Training & Attribution Methods"]
+        direction LR
+        Manifest --> Models["Dual Vision Architectures<br/>(ConvNeXt-Tiny vs ViT-B/16)"] --> Train["Head-only Training & Checkpoints<br/>(CUDA AMP mixed precision)"] --> XAI["Attribution Methods<br/>(Grad-CAM · IG · Occlusion · Baselines)"]
+    end
+
+    subgraph EvalStage ["Phase 3: Five Reliability Dimensions Evaluation"]
+        direction LR
+        XAI --> D1["1. Localization<br/>(Pointing Game · Energy)"] & D2["2. Causal Faithfulness<br/>(Deletion / Insertion AUC)"] & D3["3. Sanity Randomization<br/>(Model Randomization Test)"]
+        D1 & D2 & D3 --> Summary[("Immutable Aggregate Report<br/>(results/derived/summary.json)")]
+    end
+
+    DataStage --> TrainStage --> EvalStage
+
+    classDef srcStyle fill:#e7f5ff,stroke:#1971c2,stroke-width:2px,color:#212529
+    classDef procStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#212529
+    classDef evalStyle fill:#e6fcf5,stroke:#0ca678,stroke-width:2px,color:#212529
+
+    class Raw,Patch,Manifest,Summary srcStyle
+    class Trimap,Models,Train,XAI,D1,D2,D3 procStyle
+
+    style DataStage fill:#f8f9fa,stroke:#1971c2,stroke-width:2px,color:#1971c2,stroke-dasharray: 4 4
+    style TrainStage fill:#faf5ff,stroke:#7b1fa2,stroke-width:2px,color:#7b1fa2,stroke-dasharray: 4 4
+    style EvalStage fill:#f4fbf7,stroke:#0ca678,stroke-width:2px,color:#0ca678,stroke-dasharray: 4 4
+```
+
+### 2. Serving Architecture & Static Showcase
+
+```mermaid
+%%{init: {'themeVariables': {'fontSize': '18px'}}}%%
+flowchart TD
+    subgraph CoreStage ["Phase 1: Core Verified Artifacts"]
+        direction LR
+        SumJSON[("Immutable Evidence<br/>(summary.json & figures)")] --> Showcase["Static Showcase Page<br/>(GitHub Pages zero-backend)"]
+    end
+
+    subgraph ServStage ["Phase 2: Local Serving & Interactive UI"]
+        direction LR
+        CKPT[("Model Checkpoints<br/>(Fine-tuned weights)")] --> API["FastAPI Backend<br/>(Lazy weight loading)"] --> WebUI(["Gradio UI<br/>(Interactive heatmap inspection)"])
+    end
+
+    subgraph GateStage ["Phase 3: Release Verification Gates"]
+        direction LR
+        SumJSON & CKPT --> Gate{"Verify Release Gates<br/>(SHA-256 hashes · sync checks)"} --> Public(["Clean Publication<br/>(Verified release)"])
+    end
+
+    CoreStage --> ServStage --> GateStage
+
+    classDef srcStyle fill:#e7f5ff,stroke:#1971c2,stroke-width:2px,color:#212529
+    classDef procStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#212529
+    classDef condStyle fill:#fff9db,stroke:#f59f00,stroke-width:2px,color:#212529
+    classDef safeStyle fill:#e6fcf5,stroke:#0ca678,stroke-width:2px,color:#212529
+
+    class SumJSON,CKPT srcStyle
+    class Showcase,API,WebUI procStyle
+    class Gate condStyle
+    class Public safeStyle
+
+    style CoreStage fill:#f8f9fa,stroke:#1971c2,stroke-width:2px,color:#1971c2,stroke-dasharray: 4 4
+    style ServStage fill:#faf5ff,stroke:#7b1fa2,stroke-width:2px,color:#7b1fa2,stroke-dasharray: 4 4
+    style GateStage fill:#f4fbf7,stroke:#0ca678,stroke-width:2px,color:#0ca678,stroke-dasharray: 4 4
+```
+
+---
+
+## Project Status
 
 | Stage | Scope | Status |
 |---|---|---|
-| 0 | Packaging, lint/type/test gates, Docker CPU path, CI | ✅ done |
-| 1 | Deterministic data pipeline, manifest, fingerprint, masks, resume | ✅ done |
-| 2 | Head-only training, CUDA AMP, checkpoints, `--resume` | ✅ done |
-| 3 | Grad-CAM, Integrated Gradients, Occlusion + three baselines | ✅ done |
-| 4 | Localization, faithfulness, sanity, stability, spurious-cue evaluation | ✅ done |
-| 5 | Machine-generated report and immutable public aggregates | ✅ done |
-| 6 | FastAPI + Gradio application, with lazy weight loading | ✅ done |
+| Stage 0 | Packaging, lint/type/test gates, Docker CPU path, CI | Complete |
+| Stage 1 | Deterministic data pipeline, manifest, fingerprint, masks, resume | Complete |
+| Stage 2 | Head-only training, CUDA AMP, checkpoints, `--resume` | Complete |
+| Stage 3 | Grad-CAM, Integrated Gradients, Occlusion + three baselines | Complete |
+| Stage 4 | Localization, faithfulness, sanity, stability, spurious-cue evaluation | Complete |
+| Stage 5 | Machine-generated report and immutable public aggregates | Complete |
+| Stage 6 | FastAPI + Gradio application, with lazy weight loading | Complete |
 
-## Results (generated)
+---
 
-Everything between the markers below is generated from
-`results/derived/summary.json`; nothing is typed in by hand. Report generation
-does not modify public evidence by default. Only the canonical full experiment
-may opt in with `--update-public-artifacts` after review.
+## Results (Generated)
+
+Everything between the markers below is generated from `results/derived/summary.json`; nothing is typed in by hand:
 
 <details>
 <summary><strong>Full machine-generated result tables</strong></summary>
-
 
 <!-- RESULTS:BEGIN -->
 **Experiment `full`** — generated 2026-07-25T14:53:10.938993+00:00
@@ -146,122 +199,70 @@ _A heatmap is not proof of causal reasoning._
 
 </details>
 
+---
+
 ## Quickstart
 
-Requires Python ≥ 3.11 and [uv](https://docs.astral.sh/uv/). All commands are
-identical in PowerShell and bash unless noted.
+Requires Python ≥ 3.11 and [uv](https://docs.astral.sh/uv/):
 
-```sh
-uv sync --frozen --no-editable                  # CPU-only torch, deterministic from uv.lock
+```bash
+# 1. Sync locked environment (CPU-only Torch)
+uv sync --frozen --no-editable
+
+# 2. Self-check and unit tests (uses synthetic fixtures only)
 uv run --no-sync python -m vision_xai.cli self-check
-uv run --no-sync pytest -q                      # synthetic fixtures only, no dataset needed
+uv run --no-sync pytest -q
 ```
 
-The full pipeline (one-time ~800 MB dataset download from the official Oxford
-VGG server on the first step):
+### Dataset Preparation (~800 MB from official Oxford VGG server)
 
-```sh
+```bash
 uv run --no-sync python -m vision_xai.cli data prepare --config configs/smoke.yaml
-uv run --no-sync python -m vision_xai.cli train --model cnn --config configs/smoke.yaml
-uv run --no-sync python -m vision_xai.cli train --model vit --config configs/smoke.yaml
-uv run --no-sync python -m vision_xai.cli train --model cnn --patched --config configs/smoke.yaml
-uv run --no-sync python -m vision_xai.cli explain --model cnn --method gradcam --config configs/smoke.yaml
-uv run --no-sync python -m vision_xai.cli explain --model cnn --method integrated_gradients --config configs/smoke.yaml
-uv run --no-sync python -m vision_xai.cli explain --model vit --method integrated_gradients --config configs/smoke.yaml
-uv run --no-sync python -m vision_xai.cli evaluate --config configs/smoke.yaml
-uv run --no-sync python -m vision_xai.cli report --config configs/smoke.yaml
-uv run --no-sync python -m vision_xai.cli serve --config configs/smoke.yaml   # API + /demo UI
 ```
 
-The smoke report stays under `.artifacts/smoke/`. To regenerate the committed
-full block and figures from complete local raw outputs, use the explicit guard:
+Long runs checkpoint every 32 samples and can be resumed safely:
 
-```sh
-uv run --no-sync python -m vision_xai.cli report --config configs/full.yaml --update-public-artifacts
-```
-
-Long runs checkpoint every 32 samples and can be interrupted at any point:
-
-```sh
+```bash
 uv run --no-sync python -m vision_xai.cli data prepare --config configs/full.yaml --max-items 200
 uv run --no-sync python -m vision_xai.cli data prepare --config configs/full.yaml --resume
 ```
 
-Override the dataset location without editing configs:
-
-```powershell
-# PowerShell
-$env:VISION_XAI_DATA_DIR = "<dataset-path>"
-uv run --no-sync python -m vision_xai.cli data prepare --config configs/smoke.yaml
-```
-
-```sh
-# bash
-VISION_XAI_DATA_DIR=/mnt/d/datasets/pets uv run --no-sync python -m vision_xai.cli data prepare --config configs/smoke.yaml
-```
+---
 
 ## Docker (CPU)
 
-```sh
+```bash
+# Build image and serve API on :8000
 docker build -t vision-xai:dev .
-docker run --rm -p 8000:8000 vision-xai:dev     # serves the API on :8000
-docker compose up --build                        # + mounts checkpoints/results read-only
+docker run --rm -p 8000:8000 vision-xai:dev
+
+# Or use Docker Compose with read-only mounts
+docker compose up --build
 ```
 
-The image is CPU-only by construction (torch resolves from the PyTorch CPU
-index via `uv.lock`) and contains no dataset, weights, or secrets. CI never
-requires a GPU.
+---
 
-## GPU work
+## Project Structure & Documentation
 
-The committed full-scale evidence was produced on a **Google Colab NVIDIA L4**.
-CUDA is optional: local development, CI, the API health path, and all release
-gates except the explicitly labelled CUDA resume canary are CPU-safe.
-
-## Repository layout
-
-```
-configs/            smoke.yaml (tiny subset) and full.yaml
-src/vision_xai/     all logic: config, data pipeline, CLI
-  data/             source, splits, manifest, fingerprint, trimap, patches, transforms, datasets, prepare
-tests/              pytest suite on PIL-generated synthetic fixtures (never the real dataset)
-app/                FastAPI + Gradio (Stage 6)
-results/            immutable full aggregates and safe data-preparation summaries
-schemas/            machine-readable artifact contracts
-tools/              local release and CUDA-canary verification
+```text
+configs/            smoke.yaml and full.yaml
+src/vision_xai/     Core implementation: config, data pipeline, models, CLI
+  data/             source, splits, manifest, fingerprint, trimap, patches, prepare
+tests/              pytest unit tests (synthetic fixtures, zero remote dataset dependencies)
+app/                FastAPI backend and Gradio interface (Stage 6)
+results/            Immutable full aggregate results and safe dataset summary
+schemas/            Machine-readable artifact contracts (JSON Schema)
+tools/              Release verification and CUDA resume canary auditing tools
 ```
 
-Key documents: [DATA_CARD.md](DATA_CARD.md) · [MODEL_CARD.md](MODEL_CARD.md) ·
-[ARTIFACTS.md](ARTIFACTS.md) · [FAILURES.md](FAILURES.md) ·
-[OWNER_ACTIONS.md](OWNER_ACTIONS.md)
+- [DATA_CARD.md](DATA_CARD.md): Dataset provenance, split manifests, and license boundaries.
+- [MODEL_CARD.md](MODEL_CARD.md): Architecture specifications and evaluation scopes.
+- [ARTIFACTS.md](ARTIFACTS.md): Immutable release artifacts and SHA-256 checksums.
+- [FAILURES.md](FAILURES.md): Negative results and failure analysis.
+- [OWNER_ACTIONS.md](OWNER_ACTIONS.md): Maintainer action guides and release verification.
 
-## Design notes (Stage 1)
-
-- **Deterministic everywhere.** Train/val split is stratified per class with a
-  fixed seed; per-sample decisions (spurious-patch assignment) derive from
-  `sha256(seed, namespace, sample_id)` so they are independent of iteration
-  order, subsets, and platform.
-- **Manifest + fingerprint.** Every sample's image and trimap are sha256-hashed
-  into a JSONL manifest; the dataset fingerprint is order-independent, so a
-  resumed run is bit-identical to an uninterrupted one.
-- **Trimap semantics are verified, not assumed.** Official semantics
-  (1 = pet, 2 = background, 3 = boundary) are cross-checked empirically at
-  prepare time via a border-pixel heuristic.
-- **Spurious patch: assignments materialized, pixels on-the-fly.** Who gets the
-  patch is decided once and persisted for audit; the pixels are applied after
-  resize/crop so the patch bounding box is exact in model-input coordinates —
-  which the Stage-4 patch-attribution-energy metric requires.
-
-## Development
-
-```sh
-uv run --no-sync ruff format --check .
-uv run --no-sync ruff check .
-uv run --no-sync mypy src tests app tools
-uv run --no-sync pytest -q
-```
+---
 
 ## License
 
-[MIT](LICENSE). The Oxford-IIIT Pet dataset has its own license — see
-[DATA_CARD.md](DATA_CARD.md).
+Source code licensed under the [MIT License](LICENSE). The Oxford-IIIT Pet dataset is licensed separately by its authors (see [DATA_CARD.md](DATA_CARD.md)).

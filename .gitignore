@@ -35,6 +35,19 @@ results/derived/*
 !results/derived/summary.json
 !results/derived/summary.md
 
+# Local agent workspaces & maintainer notes
+.agents/
+.claude/
+CLAUDE.md
+PLAN.md
+PROGRESS.md
+PROJECT_PLAN.md
+interview*.md
+INTERVIEW_PREP.md
+*.private.md
+
 # OS noise
 .DS_Store
 Thumbs.db
+.idea/
+.vscode/
