@@ -84,6 +84,10 @@ def test_release_verifier_accepts_committed_evidence() -> None:
     assert "CUDA resume canary evidence" in result.stdout
 
 
+def test_local_uv_python_pin_matches_verified_toolchain() -> None:
+    assert (REPO_ROOT / ".python-version").read_text(encoding="utf-8").strip() == "3.12"
+
+
 def test_release_manifest_covers_portfolio_visuals() -> None:
     manifest = json.loads(
         (REPO_ROOT / "release" / "artifact-manifest.json").read_text(encoding="utf-8")
