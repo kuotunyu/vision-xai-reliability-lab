@@ -2,25 +2,26 @@
 
 const models = {
   cnn: {
-    label: "CNN",
+    label: "ConvNeXt",
     variant: "cnn",
     localization: "assets/figures/localization_cnn.png",
     faithfulness: "assets/figures/faithfulness_cnn.png",
     spurious: "assets/figures/spurious_cnn_patched.png",
-    spuriousVariant: "cnn_patched",
-    spuriousMethod: "gradcam",
   },
   vit: {
-    label: "ViT",
+    label: "ViT-B/16",
     variant: "vit",
     localization: "assets/figures/localization_vit.png",
     faithfulness: "assets/figures/faithfulness_vit.png",
     spurious: "assets/figures/spurious_vit_patched.png",
-    spuriousVariant: "vit_patched",
-    spuriousMethod: "integrated_gradients",
   },
 };
 
+const methodLabels = {
+  gradcam: "Grad-CAM",
+  integrated_gradients: "Integrated Gradients",
+  occlusion: "Occlusion",
+};
 const baselineMethods = new Set(["center", "random", "uniform"]);
 let fullSummary = null;
 
@@ -28,18 +29,31 @@ function mean(payload) {
   return Number(payload.mean);
 }
 
-function bestAttributionPointing(summary, variant) {
-  return Math.max(
-    ...Object.entries(summary.localization[variant])
-      .filter(([method]) => !baselineMethods.has(method))
-      .map(([, payload]) => mean(payload.all.pointing_rate)),
-  );
+function percent(value, digits = 1) {
+  return (value * 100).toFixed(digits) + "%";
 }
 
-function spuriousSpread(summary, model) {
-  const tests = summary.spurious[model.spuriousVariant][model.spuriousMethod];
-  const values = Object.values(tests).map((payload) => mean(payload.accuracy));
-  return Math.max(...values) - Math.min(...values);
+function bestAttributionPointing(summary, variant) {
+  return Object.entries(summary.localization[variant])
+    .filter(([method]) => !baselineMethods.has(method))
+    .map(([method, payload]) => ({
+      method,
+      value: mean(payload.all.pointing_rate),
+    }))
+    .reduce((best, candidate) => (candidate.value > best.value ? candidate : best));
+}
+
+function spuriousPatchEnergyMax(summary) {
+  const values = [];
+  Object.values(summary.spurious).forEach((methods) => {
+    Object.values(methods).forEach((tests) => {
+      Object.values(tests).forEach((payload) => {
+        const value = payload.patch_energy_patched_inputs.all.patch_energy.mean;
+        if (value !== null) values.push(Number(value));
+      });
+    });
+  });
+  return Math.max(...values);
 }
 
 function setMetric(name, value) {
@@ -58,10 +72,9 @@ function selectModel(key) {
   const faithfulness = document.querySelector("#faithfulness-figure");
   const spurious = document.querySelector("#spurious-figure");
   localization.src = model.localization;
-  localization.alt =
-    model.label + " localization aggregate chart with 95 percent bootstrap confidence intervals";
+  localization.alt = model.label + " localization aggregate chart，含 95% bootstrap CI";
   faithfulness.src = model.faithfulness;
-  faithfulness.alt = model.label + " deletion and insertion faithfulness curves";
+  faithfulness.alt = model.label + " deletion 與 insertion faithfulness curves";
   spurious.src = model.spurious;
   spurious.alt = model.label + " spurious patch attribution-energy aggregate chart";
 
@@ -71,15 +84,15 @@ function selectModel(key) {
 
   if (!fullSummary) return;
   const train = fullSummary.train[model.variant];
-  setMetric("val-accuracy", train.val_accuracy.toFixed(3));
-  setMetric("val-f1", train.val_macro_f1.toFixed(3));
-  setMetric("best-pointing", bestAttributionPointing(fullSummary, model.variant).toFixed(3));
+  setMetric("val-accuracy", percent(train.val_accuracy));
+  setMetric("val-f1", percent(train.val_macro_f1));
+  const best = bestAttributionPointing(fullSummary, model.variant);
+  setMetric("best-pointing", methodLabels[best.method] + " · " + percent(best.value));
   const ig = mean(
     fullSummary.randomization[model.variant].integrated_gradients.all.abs_spearman,
   );
   setMetric("ig-randomization", ig.toFixed(3));
   setMetric("ig-randomization-compact", ig.toFixed(3));
-  setMetric("spurious-spread", "≤" + spuriousSpread(fullSummary, model).toFixed(3));
 }
 
 async function loadEvidence() {
@@ -96,16 +109,22 @@ async function loadEvidence() {
       summaryResponse.json(),
       canaryResponse.json(),
     ]);
-    if (summary.schema_version !== 1 || summary.experiment !== "full") {
+    const sampleCount = summary.localization?.cnn?.center?.all?.pointing_rate?.n;
+    if (summary.schema_version !== 1 || summary.experiment !== "full" || sampleCount !== 500) {
       throw new Error("Unexpected summary contract.");
     }
-    if (canary.schema_version !== 1 || canary.status !== "PASS") {
+    if (
+      canary.schema_version !== 1 ||
+      canary.status !== "PASS" ||
+      canary.scope?.not_full_scale !== true
+    ) {
       throw new Error("Unexpected canary contract.");
     }
 
     fullSummary = summary;
     const center = mean(summary.localization.cnn.center.all.pointing_rate);
     setMetric("center-pointing", center.toFixed(3));
+    setMetric("spurious-patch-energy", percent(spuriousPatchEnergyMax(summary), 2));
 
     const canaryMap = {
       head: "head_state_exact",
@@ -120,10 +139,9 @@ async function loadEvidence() {
 
     const selected = document.querySelector("[data-model][aria-pressed='true']");
     selectModel(selected ? selected.dataset.model : "cnn");
-    status.textContent = "Canonical full-scale JSON loaded and validated in this page.";
+    status.textContent = "Canonical full-scale JSON 已載入，schema 與 scope 驗證通過。";
   } catch (error) {
-    status.textContent =
-      "Committed fallback shown; machine-readable evidence could not be loaded.";
+    status.textContent = "Machine-readable evidence 載入失敗；數值維持不可用，請檢查 artifact。";
   }
 }
 
@@ -133,4 +151,3 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   loadEvidence();
 });
-

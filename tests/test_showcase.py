@@ -17,9 +17,12 @@ class _ShowcaseParser(HTMLParser):
         self.buttons: list[dict[str, str | None]] = []
         self.images: list[dict[str, str | None]] = []
         self.local_resources: list[str] = []
+        self.html_lang: str | None = None
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         attributes = dict(attrs)
+        if tag == "html":
+            self.html_lang = attributes.get("lang")
         if identifier := attributes.get("id"):
             self.ids.add(identifier)
         if tag == "button":
@@ -82,12 +85,14 @@ def test_showcase_source_has_accessible_evidence_structure() -> None:
     parser.feed(html)
 
     assert {"main", "findings", "evidence", "cuda", "boundary"} <= parser.ids
+    assert parser.html_lang == "zh-TW"
     assert {button.get("data-model") for button in parser.buttons} == {"cnn", "vit"}
     assert all(image.get("alt") for image in parser.images)
     assert parser.local_resources == ["styles.css", "app.js"]
-    assert "not a live inference demo" in html
-    assert "fixed 500-sample" in html
-    assert "localization is not causal faithfulness" in html.lower()
+    assert "不是 live inference demo" in html
+    assert "固定 500-sample attribution subset" in html
+    assert "localization 不是 causal faithfulness" in html
+    assert 'data-metric="spurious-patch-energy"' in html
 
 
 def test_build_showcase_exports_only_the_public_allowlist(tmp_path: Path) -> None:
