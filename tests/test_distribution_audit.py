@@ -149,6 +149,7 @@ def test_sdist_excludes_runtime_artifacts_without_vcs_metadata() -> None:
         "/checkpoints",
         "/data",
         "/dist",
+        "/docs/superpowers",
         "/htmlcov",
         "/notebooks",
         "**/__pycache__",

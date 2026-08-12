@@ -12,6 +12,7 @@ __pycache__/
 .coverage
 htmlcov/
 .artifacts/
+docs/superpowers/
 .superpowers/
 dist/
 build/

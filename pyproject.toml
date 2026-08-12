@@ -57,6 +57,7 @@ exclude = [
     "/checkpoints",
     "/data",
     "/dist",
+    "/docs/superpowers",
     "/htmlcov",
     "/notebooks",
     "/PROGRESS.md",

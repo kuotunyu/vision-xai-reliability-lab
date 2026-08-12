@@ -35,6 +35,7 @@ FORBIDDEN_ROOT_NAMES = {
     "notebooks",
 }
 FORBIDDEN_EXACT_PATHS = {"PROGRESS.md", "RELEASE_AUDIT.md"}
+FORBIDDEN_PATH_PREFIXES = ("docs/superpowers/",)
 FORBIDDEN_WEIGHT_SUFFIXES = {".ckpt", ".pt", ".pth"}
 ALLOWED_RAW_RESULTS = {
     "results/raw/data_prepare/full/fingerprint.json",
@@ -332,7 +333,11 @@ def verify_privacy_and_tracked_boundary(root: Path) -> int:
     )
     for relative in tracked:
         pure = PurePosixPath(relative)
-        if relative in FORBIDDEN_EXACT_PATHS or pure.parts[0] in FORBIDDEN_ROOT_NAMES:
+        if (
+            relative in FORBIDDEN_EXACT_PATHS
+            or pure.parts[0] in FORBIDDEN_ROOT_NAMES
+            or relative.startswith(FORBIDDEN_PATH_PREFIXES)
+        ):
             raise VerificationError(f"forbidden tracked path: {relative}")
         if pure.suffix.lower() in FORBIDDEN_WEIGHT_SUFFIXES:
             raise VerificationError(f"tracked model/checkpoint file: {relative}")

@@ -186,6 +186,21 @@ def test_release_verifier_accepts_clean_candidate_repository(tmp_path: Path) -> 
     assert "Markdown local links" in result.stdout
 
 
+def test_release_verifier_rejects_tracked_agent_plans(tmp_path: Path) -> None:
+    root = _copy_evidence(tmp_path)
+    _initialize_candidate_git(root)
+    plan = root / "docs" / "superpowers" / "plans" / "local-plan.md"
+    plan.parent.mkdir(parents=True)
+    plan.write_text("# Local implementation plan\n", encoding="utf-8")
+    _git(root, "add", "docs/superpowers/plans/local-plan.md")
+    _git(root, "commit", "-m", "add local plan")
+
+    result = _run_verifier(root, "--git")
+
+    assert result.returncode == 1
+    assert "forbidden tracked path: docs/superpowers/plans/local-plan.md" in result.stderr
+
+
 def test_release_verifier_allows_only_the_explicit_canonical_origin(tmp_path: Path) -> None:
     root = _copy_evidence(tmp_path)
     _initialize_candidate_git(root)
