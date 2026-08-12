@@ -4,6 +4,7 @@ import io
 import subprocess
 import sys
 import tarfile
+import tomllib
 import zipfile
 from pathlib import Path
 
@@ -122,3 +123,37 @@ def test_distribution_audit_rejects_weights_and_private_paths(tmp_path: Path) ->
 
     assert result.returncode == 1
     assert "forbidden distribution member" in result.stderr
+
+
+def test_distribution_audit_rejects_coverage_runtime_data(tmp_path: Path) -> None:
+    wheel = tmp_path / "vision_xai-0.1.0-py3-none-any.whl"
+    sdist = tmp_path / "vision_xai-0.1.0.tar.gz"
+    _write_wheel(wheel)
+    _write_sdist(sdist, {"vision_xai-0.1.0/.coverage": b"runtime database"})
+
+    result = _run(wheel, sdist)
+
+    assert result.returncode == 1
+    assert "forbidden distribution member" in result.stderr
+
+
+def test_sdist_excludes_runtime_artifacts_without_vcs_metadata() -> None:
+    project = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    excluded = set(project["tool"]["hatch"]["build"]["targets"]["sdist"]["exclude"])
+
+    assert {
+        "/.artifacts",
+        "/.coverage",
+        "/.env",
+        "/.venv",
+        "/checkpoints",
+        "/data",
+        "/dist",
+        "/htmlcov",
+        "/notebooks",
+        "**/__pycache__",
+        "**/*.ckpt",
+        "**/*.pt",
+        "**/*.pth",
+        "**/*.pyc",
+    } <= excluded

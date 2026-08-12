@@ -24,7 +24,7 @@ FORBIDDEN_PARTS = {
     "checkpoints",
     "notebooks",
 }
-FORBIDDEN_NAMES = {"PROGRESS.md", "RELEASE_AUDIT.md"}
+FORBIDDEN_NAMES = {".coverage", "PROGRESS.md", "RELEASE_AUDIT.md"}
 FORBIDDEN_SUFFIXES = {".ckpt", ".pt", ".pth", ".pyc"}
 ALLOWED_RAW_RESULTS = {
     "results/raw/data_prepare/full/fingerprint.json",

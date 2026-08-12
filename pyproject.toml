@@ -41,6 +41,34 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/vision_xai"]
 
+# Keep source distributions safe even when building from a clean export that
+# has no VCS metadata for Hatch to consult.
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/.artifacts",
+    "/.coverage",
+    "/.env",
+    "/.mypy_cache",
+    "/.pytest_cache",
+    "/.ruff_cache",
+    "/.superpowers",
+    "/.venv",
+    "/build",
+    "/checkpoints",
+    "/data",
+    "/dist",
+    "/htmlcov",
+    "/notebooks",
+    "/PROGRESS.md",
+    "/RELEASE_AUDIT.md",
+    "**/__pycache__",
+    "**/*.ckpt",
+    "**/*.egg-info",
+    "**/*.pt",
+    "**/*.pth",
+    "**/*.pyc",
+]
+
 [tool.uv]
 default-groups = ["dev", "serve"]
 # Always use a uv-managed, isolated interpreter (never a system Anaconda/conda
