@@ -1,6 +1,6 @@
 # 正體中文 Portfolio 與 Gradio 證據工作台設計
 
-日期：2026-08-12  
+日期：2026-08-12
 狀態：已確認設計方向，待 implementation plan
 
 ## 目標
