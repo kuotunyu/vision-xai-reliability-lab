@@ -78,6 +78,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["PLR2004"] # magic numbers are fine in test assertions
+"app/demo.py" = ["RUF001"] # zh-TW UI copy intentionally uses full-width punctuation
 
 [tool.mypy]
 # Analysis target is 3.12 because numpy>=2.5 ships PEP 695 `type` aliases in its

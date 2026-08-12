@@ -1,140 +1,333 @@
-"""Gradio demo: a precomputed-results explorer (default) plus a live tab.
-
-The explorer only reads files under results/ — it works without a GPU and
-without model weights. The live tab needs a trained checkpoint.
-"""
+"""Gradio evidence workbench with an optional local-model layer."""
 
 from __future__ import annotations
 
+import html
 import io
 import json
 import logging
+import os
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
-import numpy as np
 from PIL import Image
 
-from app.service import WARNING_TEXT, InferenceService, render_attribution_png
+from app.evidence import EvidenceDashboard, EvidenceError, ModelName, load_evidence_dashboard
+from app.service import InferenceService
 from vision_xai.config import AppConfig
 from vision_xai.errors import VisionXAIError
-from vision_xai.models.factory import ModelName
-from vision_xai.paths import resolve_data_dir, resolve_results_dir
+from vision_xai.models.factory import ModelName as InferenceModelName
 
 logger = logging.getLogger(__name__)
 
+os.environ.setdefault("GRADIO_ANALYTICS_ENABLED", "False")
 
-def _explanation_runs(cfg: AppConfig) -> dict[str, Path]:
-    root = resolve_results_dir(cfg) / "raw" / "explanations" / cfg.experiment_name
-    runs: dict[str, Path] = {}
-    for run_json in sorted(root.glob("*/*/run.json")):
-        directory = run_json.parent
-        runs[f"{directory.parent.name} / {directory.name}"] = directory
-    return runs
-
-
-def _samples_for(run_dir: Path) -> list[str]:
-    attr_dir = run_dir / "attr"
-    return sorted(path.stem for path in attr_dir.glob("*.npz")) if attr_dir.is_dir() else []
+METHOD_LABELS = {
+    "gradcam": "Grad-CAM",
+    "integrated_gradients": "Integrated Gradients",
+    "occlusion": "Occlusion",
+}
+DEMO_CSS_PATH = Path(__file__).with_name("demo.css")
 
 
-def build_demo(cfg: AppConfig) -> Any:
+def _percent(value: float, digits: int = 1) -> str:
+    return f"{value:.{digits}%}"
+
+
+def _hero_html() -> str:
+    return """
+    <header class="vx-hero">
+      <div class="vx-hero-copy">
+        <h1>證據工作台</h1>
+        <p>用 committed full-scale evidence 檢查 XAI，而不是只挑看起來合理的 heatmap。</p>
+      </div>
+      <div class="vx-hero-meta" aria-label="Evidence scope">
+        <span>Full L4 results</span>
+        <span>500-sample attribution subset</span>
+        <span>Versioned artifacts</span>
+      </div>
+    </header>
+    """
+
+
+def _findings_html(dashboard: EvidenceDashboard) -> str:
+    return f"""
+    <section class="vx-findings" aria-label="三個核心結論">
+      <article>
+        <strong>{dashboard.center_pointing:.3f}</strong>
+        <h2>Center prior 勝過 attribution method</h2>
+        <p>Pointing game 的最佳 baseline；這是 localization 證據，不是 causal faithfulness。</p>
+      </article>
+      <article>
+        <strong>0.47–0.48</strong>
+        <h2>IG 未通過 sanity expectation</h2>
+        <p>Head randomization 後仍保留偏高的 absolute Spearman similarity，低才健康。</p>
+      </article>
+      <article>
+        <strong>{_percent(dashboard.spurious_patch_energy_max, 2)}</strong>
+        <h2>Spurious-patch 是負結果</h2>
+        <p>Max mean patch energy 仍低；這不代表 vision model 普遍抵抗 spurious cue。</p>
+      </article>
+    </section>
+    """
+
+
+def model_evidence_outputs(
+    dashboard: EvidenceDashboard,
+    key: ModelName,
+) -> tuple[str, Path, Path, Path]:
+    model = dashboard.model(key)
+    summary = f"""
+    <section class="vx-model-summary" aria-live="polite">
+      <div><span>Model family</span><strong>{html.escape(model.label)}</strong></div>
+      <div><span>Validation accuracy</span><strong>{_percent(model.val_accuracy)}</strong></div>
+      <div><span>Validation macro-F1</span><strong>{_percent(model.val_macro_f1)}</strong></div>
+      <div>
+        <span>最佳實際 attribution</span>
+        <strong>{html.escape(model.best_method)} · {_percent(model.best_pointing)}</strong>
+      </div>
+      <div><span>IG randomization |ρ|</span><strong>{model.ig_randomization:.3f}</strong></div>
+    </section>
+    """
+    return (
+        summary,
+        model.localization_figure,
+        model.faithfulness_figure,
+        model.spurious_figure,
+    )
+
+
+def _canary_html(dashboard: EvidenceDashboard) -> str:
+    exact_states = " · ".join(html.escape(name) for name in dashboard.canary_exact_states)
+    hash_status = "matched" if dashboard.canary_checkpoint_hash_equal else "different"
+    return f"""
+    <section class="vx-canary">
+      <div class="vx-canary-heading">
+        <h2>CUDA resume canary</h2>
+        <span class="vx-status-pass">PASS · scoped</span>
+      </div>
+      <div class="vx-canary-grid">
+        <div><span>Hardware</span><strong>{html.escape(dashboard.canary_gpu)}</strong></div>
+        <div>
+          <span>Software</span>
+          <strong>PyTorch {html.escape(dashboard.canary_torch_version)}</strong>
+        </div>
+        <div><span>Exact semantic state</span><strong>{exact_states}</strong></div>
+        <div><span>Scheduler</span><strong>{html.escape(dashboard.canary_scheduler_status)}</strong></div>
+        <div>
+          <span>Whole-checkpoint SHA-256</span>
+          <strong>{hash_status} · diagnostic only</strong>
+        </div>
+      </div>
+      <p>
+        這是 tiny synthetic、epoch-boundary resume mechanism 的證據；
+        不是 full L4 training resume 的證據。
+      </p>
+    </section>
+    """
+
+
+def _evidence_error_html(message: str) -> str:
+    return f"""
+    <section class="vx-evidence-error" role="alert">
+      <h2>公開證據無法載入</h2>
+      <p>{html.escape(message)}</p>
+      <p>
+        請執行 release verifier，確認 committed summary、CUDA canary 與
+        aggregate figures 完整。
+      </p>
+    </section>
+    """
+
+
+def _readiness_html(available: list[InferenceModelName]) -> str:
+    if not available:
+        return """
+        <section class="vx-readiness vx-readiness-empty">
+          <h2>尚未偵測到本機 checkpoint</h2>
+          <p>將相容 checkpoint 放入 config 指定位置後重新啟動即可；上方實驗證據不受影響。</p>
+        </section>
+        """
+    labels = ["ConvNeXt-Tiny" if key == "cnn" else "ViT-B/16" for key in available]
+    return f"""
+    <section class="vx-readiness vx-readiness-ready">
+      <h2>本機 inference 已就緒</h2>
+      <p>可用 model：{html.escape("、".join(labels))}。模型只在第一次操作時 lazy load。</p>
+    </section>
+    """
+
+
+def _methods_for_model(compatibility: dict[str, list[str]], model: InferenceModelName) -> list[str]:
+    return [method for method, models in compatibility.items() if model in models]
+
+
+def build_demo(cfg: AppConfig, *, evidence_root: Path | None = None) -> Any:
+    """Build the two-layer zh-TW workbench without requiring weights or data."""
     import gradio as gr
 
+    root = Path.cwd() if evidence_root is None else evidence_root
     service = InferenceService(cfg)
-    runs = _explanation_runs(cfg)
+    compatibility = service.methods()
+    available = cast(
+        list[InferenceModelName],
+        [model for model in service.available_models() if model in ("cnn", "vit")],
+    )
+    try:
+        dashboard: EvidenceDashboard | None = load_evidence_dashboard(root)
+        evidence_error: str | None = None
+    except EvidenceError as exc:
+        dashboard = None
+        evidence_error = str(exc)
 
-    def show_precomputed(run_label: str, sample_id: str) -> tuple[Image.Image | None, str]:
-        if not run_label or not sample_id:
-            return None, "Pick a run and a sample."
-        if run_label not in runs:
-            return None, "Unknown run."
-        run_dir = runs[run_label]
-        # Gradio's Dropdown only restricts values in the browser UI — a client
-        # calling the auto-generated API directly can pass any string. Validate
-        # against the real sample list before building any filesystem path, so
-        # a crafted sample_id (e.g. containing '..' or an absolute path) can
-        # never escape this run's own attr/ directory (CWE-22).
-        if sample_id not in _samples_for(run_dir):
-            return None, "Unknown sample id for this run."
-        attribution = np.load(run_dir / "attr" / f"{sample_id}.npz")["attribution"].astype(
-            np.float32
-        )
-        meta_rows = {
-            str(row["sample_id"]): row
-            for row in (
-                json.loads(line)
-                for line in (run_dir / "meta.jsonl").read_text(encoding="utf-8").splitlines()
-                if line.strip()
-            )
-        }
-        info = meta_rows.get(sample_id, {})
-        image_tensor = None
-        # Best effort: overlay on the original image when the dataset is present.
-        from vision_xai.data.manifest import MANIFEST_FILENAME, load_manifest
-        from vision_xai.data.transforms import build_eval_transform
-        from vision_xai.paths import manifests_dir
+    with gr.Blocks(
+        title="Vision XAI 證據工作台",
+        fill_width=True,
+        elem_classes=["vx-shell"],
+    ) as demo:
+        gr.HTML(_hero_html())
+        with gr.Tabs(elem_classes=["vx-tabs"]):
+            with gr.Tab("實驗證據"):
+                if dashboard is None:
+                    gr.HTML(_evidence_error_html(evidence_error or "unknown evidence error"))
+                else:
+                    gr.HTML(_findings_html(dashboard))
+                    with gr.Group(elem_classes=["vx-evidence-panel"]):
+                        model_selector = gr.Radio(
+                            choices=[("ConvNeXt-Tiny", "cnn"), ("ViT-B/16", "vit")],
+                            value="cnn",
+                            label="Model family",
+                            elem_classes=["vx-model-toggle"],
+                        )
+                        initial = model_evidence_outputs(dashboard, "cnn")
+                        model_summary = gr.HTML(initial[0])
+                        with gr.Row(elem_classes=["vx-figure-grid"], equal_height=False):
+                            localization = gr.Image(
+                                value=initial[1],
+                                label="Localization · 不是 causal faithfulness",
+                                interactive=False,
+                                buttons=[],
+                            )
+                            faithfulness = gr.Image(
+                                value=initial[2],
+                                label="Faithfulness · deletion / insertion",
+                                interactive=False,
+                                buttons=[],
+                            )
+                            spurious = gr.Image(
+                                value=initial[3],
+                                label="Spurious patch · negative result",
+                                interactive=False,
+                                buttons=[],
+                            )
 
-        manifest_path = manifests_dir(cfg) / MANIFEST_FILENAME
-        if manifest_path.is_file():
-            records = {r.sample_id: r for r in load_manifest(manifest_path)}
-            record = records.get(sample_id)
-            if record is not None:
-                image_path = resolve_data_dir(cfg) / record.image_relpath
-                if image_path.is_file():
-                    with Image.open(image_path) as raw:
-                        image_tensor = build_eval_transform(cfg.data)(raw.convert("RGB"))
-        png = render_attribution_png(attribution, image_tensor)
-        details = json.dumps(info, indent=2)
-        return Image.open(io.BytesIO(png)), f"```json\n{details}\n```\n\n**{WARNING_TEXT}**"
+                        def select_model(key: str) -> tuple[str, Path, Path, Path]:
+                            model_key: ModelName = "vit" if key == "vit" else "cnn"
+                            return model_evidence_outputs(dashboard, model_key)
 
-    def update_samples(run_label: str) -> Any:
-        choices = _samples_for(runs[run_label]) if run_label else []
-        return gr.update(choices=choices, value=choices[0] if choices else None)
+                        model_selector.change(
+                            select_model,
+                            inputs=model_selector,
+                            outputs=[model_summary, localization, faithfulness, spurious],
+                        )
+                    gr.HTML(_canary_html(dashboard))
+                    gr.HTML(
+                        f'<p class="vx-scope-note">所有 attribution-derived metrics 使用固定 '
+                        f"<strong>{dashboard.attribution_samples}-sample attribution "
+                        "subset</strong>，"
+                        "不是完整 test split。localization 不是 causal faithfulness。</p>"
+                    )
 
-    def live_explain(
-        image: Image.Image | None, model: str, method: str
-    ) -> tuple[Image.Image | None, str]:
-        if image is None:
-            return None, "Upload an image first."
-        try:
-            model_name: ModelName = "cnn" if model == "cnn" else "vit"
-            png, info = service.explain_image(image, model_name, method)
-        except VisionXAIError as exc:
-            return None, f"Error: {exc}"
-        return (
-            Image.open(io.BytesIO(png)),
-            f"```json\n{json.dumps(info, indent=2)}\n```\n\n**{WARNING_TEXT}**",
-        )
+            with gr.Tab("本機模型"):
+                gr.HTML(_readiness_html(available))
+                if available:
+                    initial_model = (
+                        cfg.serve.default_model
+                        if cfg.serve.default_model in available
+                        else available[0]
+                    )
+                    initial_methods = _methods_for_model(compatibility, initial_model)
+                    with gr.Row(elem_classes=["vx-local-grid"], equal_height=False):
+                        with gr.Column(scale=1, min_width=300):
+                            image_input = gr.Image(
+                                type="pil",
+                                label="上傳影像",
+                                sources=["upload"],
+                            )
+                            model_dropdown = gr.Dropdown(
+                                choices=[
+                                    (
+                                        "ConvNeXt-Tiny" if key == "cnn" else "ViT-B/16",
+                                        key,
+                                    )
+                                    for key in available
+                                ],
+                                value=initial_model,
+                                label="Model family",
+                            )
+                            method_dropdown = gr.Dropdown(
+                                choices=[
+                                    (METHOD_LABELS[method], method) for method in initial_methods
+                                ],
+                                value=initial_methods[0],
+                                label="Attribution method",
+                            )
+                            explain_button = gr.Button(
+                                "產生本機 attribution",
+                                variant="primary",
+                                elem_classes=["vx-action"],
+                            )
+                        with gr.Column(scale=2, min_width=360):
+                            live_heatmap = gr.Image(
+                                label="Attribution · visualization-normalized",
+                                interactive=False,
+                            )
+                            live_info = gr.HTML(
+                                '<p class="vx-live-placeholder">結果會顯示 prediction、'
+                                "probability、method metadata 與限制。</p>"
+                            )
 
-    with gr.Blocks(title="vision-xai-reliability-lab") as demo:
-        gr.Markdown(f"# vision-xai-reliability-lab\n**{WARNING_TEXT}**")
-        with gr.Tab("Precomputed explorer"):
-            run_dropdown = gr.Dropdown(choices=sorted(runs), label="explanation run")
-            sample_dropdown = gr.Dropdown(choices=[], label="sample id")
-            show_button = gr.Button("Show")
-            heatmap_output = gr.Image(label="attribution (visualization-normalized)")
-            info_output = gr.Markdown()
-            run_dropdown.change(update_samples, run_dropdown, sample_dropdown)
-            show_button.click(
-                show_precomputed, [run_dropdown, sample_dropdown], [heatmap_output, info_output]
-            )
-        with gr.Tab("Live (needs a trained checkpoint)"):
-            image_input = gr.Image(type="pil", label="upload an image")
-            model_dropdown = gr.Dropdown(
-                choices=["cnn", "vit"], value=cfg.serve.default_model, label="model"
-            )
-            method_dropdown = gr.Dropdown(
-                choices=["gradcam", "integrated_gradients", "occlusion"],
-                value="gradcam",
-                label="method (gradcam is CNN-only)",
-            )
-            explain_button = gr.Button("Explain")
-            live_heatmap = gr.Image(label="attribution (visualization-normalized)")
-            live_info = gr.Markdown()
-            explain_button.click(
-                live_explain,
-                [image_input, model_dropdown, method_dropdown],
-                [live_heatmap, live_info],
-            )
+                    def update_methods(model: str) -> Any:
+                        model_name: InferenceModelName = "vit" if model == "vit" else "cnn"
+                        methods = _methods_for_model(compatibility, model_name)
+                        return gr.Dropdown(
+                            choices=[(METHOD_LABELS[method], method) for method in methods],
+                            value=methods[0],
+                        )
+
+                    def live_explain(
+                        image: Image.Image | None,
+                        model: str,
+                        method: str,
+                    ) -> tuple[Image.Image | None, str]:
+                        if image is None:
+                            return None, '<p class="vx-inline-error">請先上傳一張影像。</p>'
+                        model_name: InferenceModelName = "vit" if model == "vit" else "cnn"
+                        try:
+                            png, info = service.explain_image(image, model_name, method)
+                        except VisionXAIError:
+                            logger.exception("local Gradio inference failed")
+                            return (
+                                None,
+                                '<p class="vx-inline-error">本機模型執行失敗；'
+                                "請檢查 server log 與 checkpoint/config 是否一致。</p>",
+                            )
+                        with Image.open(io.BytesIO(png)) as rendered:
+                            heatmap = rendered.copy()
+                        details = html.escape(json.dumps(info, indent=2, ensure_ascii=False))
+                        return (
+                            heatmap,
+                            f'<pre class="vx-json">{details}</pre>'
+                            '<p class="vx-warning">Heatmap 不是 causal reasoning 的證據。</p>',
+                        )
+
+                    model_dropdown.change(
+                        update_methods,
+                        inputs=model_dropdown,
+                        outputs=method_dropdown,
+                    )
+                    explain_button.click(
+                        live_explain,
+                        inputs=[image_input, model_dropdown, method_dropdown],
+                        outputs=[live_heatmap, live_info],
+                    )
     return demo

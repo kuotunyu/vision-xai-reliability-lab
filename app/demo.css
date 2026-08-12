@@ -1,0 +1,420 @@
+:root {
+  --vx-bg: #07131d;
+  --vx-panel: #0c212c;
+  --vx-panel-strong: #102a37;
+  --vx-line: #24414d;
+  --vx-text: #f3efe7;
+  --vx-muted: #adc0c8;
+  --vx-cyan: #42d2e1;
+  --vx-coral: #ff785f;
+  --vx-lime: #a7e33f;
+  --vx-focus: #f7c95c;
+  --vx-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+}
+
+html,
+body {
+  background: var(--vx-bg) !important;
+}
+
+.gradio-container,
+.vx-shell {
+  max-width: none !important;
+  min-height: 100vh;
+  background: var(--vx-bg) !important;
+  color: var(--vx-text) !important;
+  font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif !important;
+  font-size: 17px !important;
+}
+
+.vx-shell > .main,
+.vx-shell .contain {
+  max-width: 1480px !important;
+  margin: 0 auto !important;
+  padding: 20px 24px 36px !important;
+}
+
+.vx-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.8fr);
+  gap: 28px;
+  align-items: end;
+  max-width: 1480px;
+  margin: 0 auto 14px;
+  padding: 26px 28px;
+  border: 1px solid var(--vx-line);
+  border-radius: 18px;
+  background: var(--vx-panel);
+  box-shadow: var(--vx-shadow);
+}
+
+.vx-hero h1 {
+  margin: 0 0 10px;
+  color: var(--vx-text);
+  font-family: "Bahnschrift", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  font-size: clamp(2.7rem, 6vw, 5.4rem);
+  font-weight: 700;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+}
+
+.vx-hero p {
+  max-width: 68ch;
+  margin: 0;
+  color: var(--vx-muted);
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  line-height: 1.6;
+}
+
+.vx-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.vx-hero-meta span,
+.vx-status-pass {
+  border: 1px solid var(--vx-line);
+  border-radius: 999px;
+  padding: 7px 11px;
+  color: var(--vx-cyan);
+  background: #081a24;
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.vx-tabs {
+  max-width: 1480px;
+  margin: 0 auto;
+}
+
+.vx-tabs > .tab-nav {
+  gap: 4px;
+  border-bottom: 1px solid var(--vx-line) !important;
+}
+
+.vx-tabs button[role="tab"] {
+  min-height: 52px;
+  padding: 12px 20px !important;
+  border-radius: 10px 10px 0 0 !important;
+  color: var(--vx-muted) !important;
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+}
+
+.vx-tabs button[role="tab"][aria-selected="true"] {
+  color: var(--vx-text) !important;
+  background: var(--vx-panel) !important;
+  box-shadow: inset 0 -3px 0 var(--vx-cyan);
+}
+
+.vx-findings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.vx-findings article {
+  min-height: 210px;
+  padding: 22px;
+  border: 1px solid var(--vx-line);
+  border-radius: 16px;
+  background: var(--vx-panel);
+}
+
+.vx-findings article:nth-child(2) strong {
+  color: var(--vx-coral);
+}
+
+.vx-findings article:nth-child(3) strong {
+  color: var(--vx-lime);
+}
+
+.vx-findings strong {
+  display: block;
+  margin-bottom: 16px;
+  color: var(--vx-cyan);
+  font-family: "Bahnschrift", "Cascadia Code", monospace;
+  font-size: clamp(2.2rem, 5vw, 4.4rem);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+}
+
+.vx-findings h2,
+.vx-canary h2,
+.vx-readiness h2,
+.vx-evidence-error h2 {
+  margin: 0 0 8px;
+  color: var(--vx-text);
+  font-size: 1.16rem;
+  line-height: 1.35;
+}
+
+.vx-findings p,
+.vx-canary p,
+.vx-readiness p,
+.vx-evidence-error p,
+.vx-scope-note,
+.vx-live-placeholder {
+  margin: 0;
+  color: var(--vx-muted);
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
+.vx-evidence-panel,
+.vx-canary,
+.vx-readiness,
+.vx-evidence-error {
+  margin: 12px 0 !important;
+  padding: 20px !important;
+  border: 1px solid var(--vx-line) !important;
+  border-radius: 16px !important;
+  background: var(--vx-panel) !important;
+  box-shadow: none !important;
+}
+
+.vx-evidence-panel .vx-evidence-panel {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.vx-evidence-panel .styler,
+.vx-evidence-panel .form {
+  background: transparent !important;
+}
+
+.vx-model-toggle {
+  margin-bottom: 12px;
+  border: 1px solid var(--vx-line) !important;
+  background: #081a24 !important;
+}
+
+.vx-model-toggle label {
+  border-color: var(--vx-line) !important;
+  background: var(--vx-panel) !important;
+}
+
+.vx-model-toggle label.selected {
+  background: var(--vx-panel-strong) !important;
+}
+
+.vx-model-toggle label,
+.vx-local-grid label {
+  color: var(--vx-text) !important;
+  font-size: 0.98rem !important;
+  font-weight: 650 !important;
+}
+
+.vx-model-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--vx-line);
+  border-radius: 12px;
+  background: var(--vx-line);
+}
+
+.vx-model-summary div {
+  display: flex;
+  min-height: 96px;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px;
+  background: var(--vx-panel-strong);
+}
+
+.vx-model-summary span,
+.vx-canary-grid span {
+  color: var(--vx-muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.025em;
+}
+
+.vx-model-summary strong,
+.vx-canary-grid strong {
+  color: var(--vx-text);
+  font-size: 1.05rem;
+  line-height: 1.35;
+}
+
+.vx-figure-grid {
+  align-items: start !important;
+  gap: 10px !important;
+  margin-top: 12px;
+}
+
+.vx-figure-grid > div {
+  min-width: 0 !important;
+}
+
+.vx-figure-grid img {
+  background: #f8f4ec !important;
+  object-fit: contain !important;
+}
+
+.vx-canary-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.vx-canary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 14px;
+}
+
+.vx-canary-grid div {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.vx-status-pass {
+  color: var(--vx-lime);
+}
+
+.vx-scope-note {
+  margin: 14px 2px 0 !important;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #081a24;
+}
+
+.vx-scope-note strong {
+  color: var(--vx-text);
+}
+
+.vx-evidence-error {
+  border-color: #6c413b !important;
+}
+
+.vx-evidence-error h2,
+.vx-inline-error {
+  color: var(--vx-coral) !important;
+}
+
+.vx-readiness-ready h2 {
+  color: var(--vx-lime);
+}
+
+.vx-local-grid {
+  gap: 14px !important;
+  margin-top: 12px;
+}
+
+.vx-action {
+  min-height: 50px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: var(--vx-cyan) !important;
+  color: #06212a !important;
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+}
+
+.vx-action:hover {
+  background: #75e3ec !important;
+  box-shadow: 0 8px 20px rgba(66, 210, 225, 0.22) !important;
+}
+
+.vx-action:focus-visible,
+.vx-tabs button:focus-visible,
+.vx-shell input:focus-visible,
+.vx-shell button:focus-visible {
+  outline: 3px solid var(--vx-focus) !important;
+  outline-offset: 3px !important;
+}
+
+.vx-json {
+  max-height: 320px;
+  overflow: auto;
+  margin: 0;
+  padding: 16px;
+  border-radius: 10px;
+  background: #061019;
+  color: #d9e8ee;
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.vx-warning,
+.vx-inline-error {
+  margin: 10px 0 0;
+  color: var(--vx-coral);
+  font-weight: 650;
+}
+
+.vx-shell footer,
+.vx-shell .footer {
+  display: none !important;
+}
+
+@media (max-width: 1080px) {
+  .vx-model-summary,
+  .vx-canary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .vx-figure-grid {
+    flex-wrap: wrap !important;
+  }
+
+  .vx-figure-grid > div {
+    flex: 1 1 46% !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .vx-shell > .main,
+  .vx-shell .contain {
+    padding: 10px 12px 24px !important;
+  }
+
+  .vx-hero {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 22px 18px;
+  }
+
+  .vx-hero h1 {
+    font-size: clamp(2.4rem, 12vw, 3.3rem);
+  }
+
+  .vx-hero-meta {
+    justify-content: flex-start;
+  }
+
+  .vx-findings,
+  .vx-model-summary,
+  .vx-canary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vx-findings article {
+    min-height: 0;
+  }
+
+  .vx-figure-grid > div {
+    flex-basis: 100% !important;
+  }
+
+  .vx-canary-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -53,6 +53,9 @@ def test_full_evidence_exposes_safe_figures_and_canary_scope() -> None:
     )
     assert dashboard.canary_scheduler_status == "not_applicable"
     assert dashboard.canary_not_full_scale is True
+    assert dashboard.canary_checkpoint_hash_equal is True
+    assert dashboard.canary_gpu == "NVIDIA GeForce RTX 4090"
+    assert dashboard.canary_torch_version == "2.11.0+cu130"
 
 
 def test_non_full_summary_fails_closed(tmp_path: Path) -> None:

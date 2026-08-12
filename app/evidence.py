@@ -57,6 +57,9 @@ class EvidenceDashboard:
     canary_exact_states: tuple[str, ...]
     canary_scheduler_status: str
     canary_not_full_scale: bool
+    canary_checkpoint_hash_equal: bool
+    canary_gpu: str
+    canary_torch_version: str
 
     def model(self, key: ModelName) -> ModelEvidence:
         return self.models[key]
@@ -202,7 +205,9 @@ def _spurious_patch_energy_max(summary: Mapping[str, object]) -> float:
     return max(means)
 
 
-def _canary_contract(canary: Mapping[str, object]) -> tuple[tuple[str, ...], str, bool]:
+def _canary_contract(
+    canary: Mapping[str, object],
+) -> tuple[tuple[str, ...], str, bool, bool, str, str]:
     if _integer(canary.get("schema_version"), "schema_version") != 1:
         raise _ContractError("schema_version")
     if _string(canary.get("status"), "status") != "PASS":
@@ -231,7 +236,20 @@ def _canary_contract(canary: Mapping[str, object]) -> tuple[tuple[str, ...], str
     )
     if not not_full_scale:
         raise _ContractError("scope.not_full_scale")
-    return exact_states, scheduler_status, not_full_scale
+    checkpoint_hash_equal = _boolean(
+        comparisons.get("checkpoint_file_sha256_equal"),
+        "comparisons.checkpoint_file_sha256_equal",
+    )
+    gpu = _string(_at(canary, "hardware", "gpu"), "hardware.gpu")
+    torch_version = _string(_at(canary, "software", "torch"), "software.torch")
+    return (
+        exact_states,
+        scheduler_status,
+        not_full_scale,
+        checkpoint_hash_equal,
+        gpu,
+        torch_version,
+    )
 
 
 def load_evidence_dashboard(root: Path) -> EvidenceDashboard:
@@ -267,7 +285,14 @@ def load_evidence_dashboard(root: Path) -> EvidenceDashboard:
         models = {
             key: _model_evidence(root, summary, key, attribution_samples) for key in MODEL_KEYS
         }
-        exact_states, scheduler_status, not_full_scale = _canary_contract(canary)
+        (
+            exact_states,
+            scheduler_status,
+            not_full_scale,
+            checkpoint_hash_equal,
+            canary_gpu,
+            canary_torch_version,
+        ) = _canary_contract(canary)
         return EvidenceDashboard(
             center_pointing=center_pointing,
             attribution_samples=attribution_samples,
@@ -276,6 +301,9 @@ def load_evidence_dashboard(root: Path) -> EvidenceDashboard:
             canary_exact_states=exact_states,
             canary_scheduler_status=scheduler_status,
             canary_not_full_scale=not_full_scale,
+            canary_checkpoint_hash_equal=checkpoint_hash_equal,
+            canary_gpu=canary_gpu,
+            canary_torch_version=canary_torch_version,
         )
     except _ContractError:
         raise EvidenceError(

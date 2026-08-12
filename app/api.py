@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import base64
 import logging
+import os
 from typing import Annotated, Any
 
 import torch
@@ -21,6 +22,11 @@ from vision_xai.errors import ExplainError, VisionXAIError
 from vision_xai.models.factory import MODEL_NAMES, ModelName
 
 logger = logging.getLogger(__name__)
+
+
+def configure_gradio_environment() -> None:
+    """Disable optional Gradio analytics unless the operator explicitly opts in."""
+    os.environ.setdefault("GRADIO_ANALYTICS_ENABLED", "False")
 
 
 def _validated_model(model: str) -> ModelName:
@@ -97,15 +103,22 @@ def create_app(cfg: AppConfig) -> FastAPI:
 
 
 def _try_mount_demo(application: FastAPI, cfg: AppConfig) -> None:
+    configure_gradio_environment()
     try:
         import gradio as gr
 
-        from app.demo import build_demo
+        from app.demo import DEMO_CSS_PATH, build_demo
     except ImportError:
         logger.info("gradio not installed — the API runs without the /demo UI")
         return
     try:
-        gr.mount_gradio_app(application, build_demo(cfg), path="/demo")
+        gr.mount_gradio_app(
+            application,
+            build_demo(cfg),
+            path="/demo",
+            css_paths=DEMO_CSS_PATH,
+            footer_links=[],
+        )
         logger.info("Gradio demo mounted at /demo")
     except Exception:  # gradio version quirks must never take down the API
         logger.exception("failed to mount the Gradio demo; API continues without it")
