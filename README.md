@@ -29,18 +29,78 @@
 
 ---
 
-## 證據流程與本機模型
+## 實驗證據流程
+
+這條流程把資料契約、模型、Attribution 與可靠性評估分開，最後才產生可公開、可驗證的 aggregate artifacts。
+
+```mermaid
+flowchart TB
+    subgraph Produce["①–③ 產生證據"]
+        direction LR
+        Data["Oxford-IIIT Pet"] --> Contract["固定資料切分<br/>manifest · fingerprint"]
+        Contract --> Conditions["Clean<br/>Spurious Patch"]
+        Conditions --> Models["ConvNeXt-Tiny<br/>ViT-B/16"]
+        Models --> Attribution["Grad-CAM · Integrated Gradients<br/>Occlusion · Center/Random/Uniform"]
+    end
+
+    Attribution --> Evaluate{"④ 可靠性評估"}
+    Evaluate --> Localization["Localization"]
+    Evaluate --> Dependence["Faithfulness<br/>Model Randomization"]
+    Evaluate --> Robustness["Flip Consistency<br/>Spurious Patch"]
+    Localization --> Aggregate["聚合證據<br/>95% bootstrap CI"]
+    Dependence --> Aggregate
+    Robustness --> Aggregate
+    Aggregate --> Integrity["JSON Schema<br/>SHA-256 manifest"]
+    Integrity --> Showcase["GitHub Pages<br/>靜態成果展示"]
+
+    classDef data fill:#E8F4F8,stroke:#0B7285,stroke-width:2px,color:#102A43
+    classDef model fill:#EDE9FE,stroke:#6D28D9,stroke-width:2px,color:#2E1065
+    classDef evaluation fill:#FFF4E6,stroke:#C2410C,stroke-width:2px,color:#431407
+    classDef evidence fill:#ECFDF3,stroke:#15803D,stroke-width:2px,color:#052E16
+    class Data,Contract,Conditions data
+    class Models,Attribution model
+    class Evaluate,Localization,Dependence,Robustness evaluation
+    class Aggregate,Integrity,Showcase evidence
+```
+
+## 公開與本機架構
+
+GitHub 保存可稽核的 source 與聚合證據；dataset、weights、checkpoints 只存在使用者的本機環境。Gradio 同時呈現已提交證據與使用者提供的模型結果，但不把本機資產帶進公開 Repository。
 
 ```mermaid
 flowchart LR
-    Data["Oxford-IIIT Pet<br/>deterministic manifest"] --> Train["ConvNeXt-Tiny · ViT-B/16<br/>head-only training"]
-    Train --> Attr["Grad-CAM · Integrated Gradients<br/>Occlusion · baselines"]
-    Attr --> Eval["Localization · Faithfulness<br/>Randomization · Flip · Spurious Patch"]
-    Eval --> Evidence["Aggregate evidence<br/>95% bootstrap CI · SHA-256"]
-    Evidence --> Showcase["GitHub Pages<br/>weight-free showcase"]
-    Train -. user-supplied checkpoints .-> Local["FastAPI + Gradio<br/>local model workspace"]
-    Evidence --> Gate{"Release verifier"}
-    Local --> Gate
+    subgraph Public["公開層｜GitHub（不含 weights）"]
+        direction TB
+        Source["Source · tests · schemas"]
+        Evidence["Aggregates · figures<br/>CUDA canary"]
+        Gate["✓ CPU CI<br/>release verifier"]
+        Pages["GitHub Pages<br/>靜態成果展示"]
+        Boundary["⊘ 不追蹤<br/>dataset · weights · checkpoints"]
+        Source --> Gate
+        Evidence --> Gate
+        Gate -->|PASS| Pages
+        Gate -. "檢查公開邊界" .-> Boundary
+    end
+
+    subgraph Local["本機模型層｜使用者環境"]
+        direction TB
+        Dataset["本機 dataset"] --> Train["train / resume"]
+        Train --> Checkpoint["使用者提供<br/>checkpoint"]
+        Checkpoint --> API["FastAPI"]
+        API --> Demo["Gradio 證據工作台"]
+    end
+
+    Source -. "clean install" .-> API
+    Evidence -. "唯讀證據" .-> Demo
+
+    classDef public fill:#E8F4F8,stroke:#0B7285,stroke-width:2px,color:#102A43
+    classDef verified fill:#ECFDF3,stroke:#15803D,stroke-width:2px,color:#052E16
+    classDef local fill:#F3E8FF,stroke:#7E22CE,stroke-width:2px,color:#3B0764
+    classDef boundary fill:#FFF1F2,stroke:#BE123C,stroke-width:2px,color:#4C0519
+    class Source,Evidence public
+    class Gate,Pages verified
+    class Dataset,Train,Checkpoint,API,Demo local
+    class Boundary boundary
 ```
 
 ---

@@ -29,18 +29,78 @@ These are real full-scale results: all four classifier heads trained on the comp
 
 ---
 
-## Evidence flow and local model
+## Experiment evidence flow
+
+This flow separates the data contract, models, Attribution, and reliability evaluation before producing public, verifiable aggregate artifacts.
+
+```mermaid
+flowchart TB
+    subgraph Produce["①–③ Produce evidence"]
+        direction LR
+        Data["Oxford-IIIT Pet"] --> Contract["Fixed split<br/>manifest · fingerprint"]
+        Contract --> Conditions["Clean<br/>Spurious Patch"]
+        Conditions --> Models["ConvNeXt-Tiny<br/>ViT-B/16"]
+        Models --> Attribution["Grad-CAM · Integrated Gradients<br/>Occlusion · Center/Random/Uniform"]
+    end
+
+    Attribution --> Evaluate{"④ Reliability evaluation"}
+    Evaluate --> Localization["Localization"]
+    Evaluate --> Dependence["Faithfulness<br/>Model Randomization"]
+    Evaluate --> Robustness["Flip Consistency<br/>Spurious Patch"]
+    Localization --> Aggregate["Aggregate evidence<br/>95% bootstrap CI"]
+    Dependence --> Aggregate
+    Robustness --> Aggregate
+    Aggregate --> Integrity["JSON Schema<br/>SHA-256 manifest"]
+    Integrity --> Showcase["GitHub Pages<br/>static showcase"]
+
+    classDef data fill:#E8F4F8,stroke:#0B7285,stroke-width:2px,color:#102A43
+    classDef model fill:#EDE9FE,stroke:#6D28D9,stroke-width:2px,color:#2E1065
+    classDef evaluation fill:#FFF4E6,stroke:#C2410C,stroke-width:2px,color:#431407
+    classDef evidence fill:#ECFDF3,stroke:#15803D,stroke-width:2px,color:#052E16
+    class Data,Contract,Conditions data
+    class Models,Attribution model
+    class Evaluate,Localization,Dependence,Robustness evaluation
+    class Aggregate,Integrity,Showcase evidence
+```
+
+## Public and local architecture
+
+GitHub retains auditable source and aggregate evidence. Datasets, weights, and checkpoints stay in the user's local environment. Gradio can show committed evidence alongside user-supplied model output without moving local assets into the public repository.
 
 ```mermaid
 flowchart LR
-    Data["Oxford-IIIT Pet<br/>deterministic manifest"] --> Train["ConvNeXt-Tiny · ViT-B/16<br/>head-only training"]
-    Train --> Attr["Grad-CAM · Integrated Gradients<br/>Occlusion · baselines"]
-    Attr --> Eval["Localization · Faithfulness<br/>Randomization · Flip · Spurious Patch"]
-    Eval --> Evidence["Aggregate evidence<br/>95% bootstrap CI · SHA-256"]
-    Evidence --> Showcase["GitHub Pages<br/>weight-free showcase"]
-    Train -. user-supplied checkpoints .-> Local["FastAPI + Gradio<br/>local model workspace"]
-    Evidence --> Gate{"Release verifier"}
-    Local --> Gate
+    subgraph Public["Public layer | GitHub (weight-free)"]
+        direction TB
+        Source["Source · tests · schemas"]
+        Evidence["Aggregates · figures<br/>CUDA canary"]
+        Gate["✓ CPU CI<br/>release verifier"]
+        Pages["GitHub Pages<br/>static showcase"]
+        Boundary["⊘ Not tracked<br/>dataset · weights · checkpoints"]
+        Source --> Gate
+        Evidence --> Gate
+        Gate -->|PASS| Pages
+        Gate -. "check boundary" .-> Boundary
+    end
+
+    subgraph Local["Local model layer | User environment"]
+        direction TB
+        Dataset["Local dataset"] --> Train["train / resume"]
+        Train --> Checkpoint["User-supplied<br/>checkpoint"]
+        Checkpoint --> API["FastAPI"]
+        API --> Demo["Gradio evidence workbench"]
+    end
+
+    Source -. "clean install" .-> API
+    Evidence -. "read-only evidence" .-> Demo
+
+    classDef public fill:#E8F4F8,stroke:#0B7285,stroke-width:2px,color:#102A43
+    classDef verified fill:#ECFDF3,stroke:#15803D,stroke-width:2px,color:#052E16
+    classDef local fill:#F3E8FF,stroke:#7E22CE,stroke-width:2px,color:#3B0764
+    classDef boundary fill:#FFF1F2,stroke:#BE123C,stroke-width:2px,color:#4C0519
+    class Source,Evidence public
+    class Gate,Pages verified
+    class Dataset,Train,Checkpoint,API,Demo local
+    class Boundary boundary
 ```
 
 ---
