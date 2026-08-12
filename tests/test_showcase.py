@@ -102,11 +102,12 @@ def test_showcase_uses_zh_tw_for_interface_scaffolding() -> None:
     assert "完整規模 / 2026.07.25" in html
     assert "<dt>訓練</dt>" in html
     assert "<dt>信賴區間</dt>" in html
-    assert "Localization 盲點" in html
-    assert "Sanity check 未通過" in html
+    assert "Localization 與 baseline" in html
+    assert "Model-randomization sanity check" in html
+    assert "Spurious-patch experiment" in html
     assert "已提交的完整規模彙總" in html
-    assert "公開證據邊界" in html
-    assert "證據先於美感" in html
+    assert "公開 artifact 的驗證範圍" in html
+    assert "實驗結果、證據邊界與限制" in html
     assert "開啟正式結果 JSON" in html
     assert "Localization trap" not in html
     assert "Sanity failure" not in html
@@ -114,6 +115,49 @@ def test_showcase_uses_zh_tw_for_interface_scaffolding() -> None:
     assert "Committed full-scale aggregates" not in html
     assert "Public evidence boundary" not in html
     assert "開啟 CANONICAL JSON" not in html
+
+
+def test_showcase_uses_research_report_copy_and_readable_density() -> None:
+    html = (REPO_ROOT / "showcase" / "index.html").read_text(encoding="utf-8")
+    css = (REPO_ROOT / "showcase" / "styles.css").read_text(encoding="utf-8")
+
+    headings = [
+        " ".join(re.sub(r"<[^>]+>", "", heading).split())
+        for heading in re.findall(r"<h[1-3][^>]*>(.*?)</h[1-3]>", html, flags=re.DOTALL)
+    ]
+
+    assert headings[0] == "Vision XAI 的可靠性評估"
+    assert "主要實驗結果與解讀限制" in headings
+    assert "各項 metric 回答不同的評估問題" in headings
+    assert "CUDA resume canary 的 state-equivalence 檢查" in headings
+    assert all("\uff1f" not in heading and "\uff01" not in heading for heading in headings)
+    assert "三個可被推翻的結果" not in html
+    assert "好看\uff0c不是一項 metric" not in html
+    assert "<strong>Google Colab · NVIDIA L4</strong>" in html
+
+    assert re.search(r"html\s*\{[^}]*font-size:\s*18px", css, flags=re.DOTALL)
+    assert re.search(r"--max:\s*76rem", css)
+    assert re.search(
+        r"h1\s*\{[^}]*font-size:\s*clamp\(2rem,\s*3vw,\s*2\.7rem\)",
+        css,
+        flags=re.DOTALL,
+    )
+    assert re.search(
+        r"h2\s*\{[^}]*font-size:\s*clamp\(1\.45rem,\s*1\.9vw,\s*1\.85rem\)",
+        css,
+        flags=re.DOTALL,
+    )
+    assert re.search(
+        r"\.findings,\s*\.evidence,\s*\.cuda,\s*\.boundary\s*"
+        r"\{\s*padding:\s*1\.75rem 0;\s*\}",
+        css,
+    )
+    assert re.search(r"\.masthead\s*\{[^}]*align-items:\s*start", css, flags=re.DOTALL)
+    assert re.search(
+        r"\.run-stamp\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*1fr auto",
+        css,
+        flags=re.DOTALL,
+    )
 
 
 def test_showcase_avoids_decorative_scaffolding_and_system_display_type() -> None:
