@@ -1,7 +1,9 @@
 # README Evidence-First Refresh Design
 
-**Date:** 2026-08-12  
-**Status:** Approved direction; implementation pending  
+**Date:** 2026-08-12
+
+**Status:** Approved direction; implementation pending
+
 **Scope:** `README.md`, `README_en.md`, the README hero screenshot, and their release checks
 
 ## Objective
